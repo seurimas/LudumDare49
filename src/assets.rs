@@ -1,10 +1,13 @@
 use amethyst::{
-    assets::{AssetStorage, Handle, Loader, ProgressCounter},
+    assets::{AssetStorage, Format, Handle, Loader, ProgressCounter, RonFormat},
     audio::{output::Output, Source, SourceHandle, WavFormat},
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
     shred::{Read, ResourceId, SystemData, World},
+    Error,
 };
+
+use crate::level::{Level, LevelHandle};
 
 pub fn load_sound_file<'a, N>(
     world: &mut World,
@@ -50,6 +53,16 @@ where
     )
 }
 
+pub fn load_level<'a>(
+    world: &mut World,
+    path: String,
+    progress: &'a mut ProgressCounter,
+) -> Handle<Level> {
+    let loader = world.read_resource::<Loader>();
+    let level_storage = world.read_resource::<AssetStorage<Level>>();
+    loader.load(path, RonFormat, progress, &level_storage)
+}
+
 pub type SpriteRes<'s> = Option<Read<'s, SpriteStorage>>;
 
 #[derive(Clone)]
@@ -65,6 +78,10 @@ impl<'s> SpriteHandles for Option<Read<'s, SpriteStorage>> {
     fn get_handle(&self) -> SpriteSheetHandle {
         self.as_ref().unwrap().sprites.clone()
     }
+}
+#[derive(Clone)]
+pub struct LevelStorage {
+    pub levels: Vec<LevelHandle>,
 }
 
 #[derive(Clone)]

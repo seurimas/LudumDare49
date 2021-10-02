@@ -1,4 +1,5 @@
 use amethyst::{
+    assets::{Asset, AssetStorage, Handle, ProcessableAsset, ProcessingState},
     core::{math::Vector3, SystemBundle, Transform},
     ecs::*,
     prelude::*,
@@ -14,9 +15,35 @@ use ncollide2d::{
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    asteroid::Asteroid,
+    assets::LevelStorage,
+    asteroid::{generate_asteroid_field, Asteroid},
+    delivery::{generate_delivery_zone, DeliveryCooldownSystem},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
+    player::initialize_player,
 };
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct AsteroidDesc {
+    location: Option<(f32, f32, f32, f32)>,
+    normal: Option<usize>,
+    bombs: Option<usize>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Level {
+    boundaries: (f32, f32),
+    player_start: Option<(f32, f32)>,
+    deliveries: Vec<(f32, f32)>,
+    asteroids: Vec<AsteroidDesc>,
+}
+
+pub type LevelHandle = Handle<Level>;
+
+impl Asset for Level {
+    const NAME: &'static str = "ld49::Level";
+    type Data = Level;
+    type HandleStorage = VecStorage<LevelHandle>;
+}
 
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
@@ -85,6 +112,45 @@ pub fn generate_boundaries(world: &mut World, size: (f32, f32)) {
         .build();
 }
 
+pub fn initialize_level(world: &mut World, level: &LevelHandle) {
+    let level = {
+        world
+            .read_resource::<AssetStorage<Level>>()
+            .get(level)
+            .cloned()
+            .unwrap()
+    };
+    let mut transform = Transform::default();
+    let (x, y) = level.player_start.unwrap_or((0.0, 0.0));
+    transform.set_translation_x(x);
+    transform.set_translation_y(y);
+    initialize_player(world, transform);
+    for (x, y) in level.deliveries.iter() {
+        let mut transform = Transform::default();
+        transform.set_translation_x(*x);
+        transform.set_translation_y(*y);
+        println!("{:?}", transform);
+        generate_delivery_zone(world, (75.0, 75.0), transform);
+    }
+    for asteroid_field in level.asteroids {
+        let mut transform = Transform::default();
+        let location =
+            asteroid_field
+                .location
+                .unwrap_or((0.0, 0.0, level.boundaries.0, level.boundaries.1));
+        transform.set_translation_x(location.0);
+        transform.set_translation_y(location.1);
+        generate_asteroid_field(
+            world,
+            (location.2, location.3),
+            asteroid_field.normal.unwrap_or_default(),
+            asteroid_field.bombs.unwrap_or_default(),
+            transform,
+        );
+    }
+    generate_boundaries(world, level.boundaries);
+}
+
 #[derive(Default)]
 pub struct AsteroidReintroductionSystem {
     reader: Option<ReaderId<PhysicsProximityEvent>>,
@@ -133,7 +199,9 @@ fn reintroduce(
     };
     physics.set_location(&handle, x, y);
     let current_speed = physics.get_velocity(&handle).unwrap().magnitude();
-    physics.set_velocity(&handle, Vector2::new(vx, vy).normalize() * current_speed);
+    if current_speed > 0.0 {
+        physics.set_velocity(&handle, Vector2::new(vx, vy).normalize() * current_speed);
+    }
 }
 
 struct DummySystem;
@@ -206,6 +274,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LevelBundle {
         dispatcher: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         dispatcher.add(DummySystem, "boundary_dummy", &[]);
+        dispatcher.add(DeliveryCooldownSystem, "delivery_cooldown", &[]);
         dispatcher.add(
             AsteroidReintroductionSystem::default(),
             "asteroid_reintroduction",

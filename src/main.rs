@@ -1,5 +1,9 @@
+#[macro_use]
+extern crate serde;
+use std::path::{Path, PathBuf};
+
 use amethyst::{
-    assets::{AssetStorage, ProgressCounter},
+    assets::{AssetStorage, Directory, Processor, ProgressCounter, Source},
     audio::output::init_output,
     core::{Transform, TransformBundle},
     ecs::*,
@@ -15,11 +19,14 @@ use amethyst::{
     winit::{dpi::LogicalSize, Event, WindowEvent},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
-use assets::{load_sound_file, load_spritesheet, SoundStorage, SpriteStorage};
+use assets::{
+    load_level, load_sound_file, load_spritesheet, LevelStorage, SoundStorage, SpriteStorage,
+};
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
-use level::{generate_boundaries, LevelBundle};
+use level::{generate_boundaries, initialize_level, Level, LevelBundle, LevelHandle};
 use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
+use serde::Deserialize;
 
 use crate::delivery::generate_delivery_zone;
 mod assets;
@@ -31,36 +38,18 @@ mod physics;
 mod player;
 mod tractor;
 
-type ASSETS = (SpriteStorage,);
-
-#[derive(Default)]
-struct LoadingState {
-    progress: Option<ProgressCounter>,
-    assets: Option<ASSETS>,
-}
+type ASSETS = (SpriteStorage, LevelStorage);
 
 struct GameplayState {
-    assets: (SpriteStorage,),
+    assets: ASSETS,
+    level: LevelHandle,
 }
 impl SimpleState for GameplayState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         data.world.delete_all();
         data.world.insert(self.assets.0.clone());
-        let mut transform = Transform::default();
-        transform.set_translation_x(50.0);
-        transform.set_translation_y(50.0);
-        initialize_player(data.world, transform);
-        let mut transform = Transform::default();
-        transform.set_translation_x(25.0);
-        transform.set_translation_y(25.0);
-        transform.set_translation_x(0.0);
-        transform.set_translation_y(0.0);
-        generate_delivery_zone(data.world, (75.0, 75.0), transform.clone());
-        transform.set_translation_x(0.0);
-        transform.set_translation_y(0.0);
-        generate_asteroid_field(data.world, (1000.0, 1000.0), 300, 60, transform);
-        generate_boundaries(data.world, (1200.0, 1200.0));
-        // initialize_tile_world(data.world);
+        data.world.insert(self.assets.1.clone());
+        initialize_level(data.world, &self.level);
         // data.world.exec(|mut creator: UiCreator<'_>| {
         //     creator.create(get_resource("hud.ron"), ());
         // });
@@ -141,6 +130,7 @@ impl SimpleState for MenuState {
                         if start == ui_event.target {
                             return Trans::Push(Box::new(GameplayState {
                                 assets: self.assets.clone(),
+                                level: self.assets.1.levels.get(0).unwrap().clone(),
                             }));
                         }
                     }
@@ -157,6 +147,28 @@ impl SimpleState for MenuState {
     }
 }
 
+#[derive(Default)]
+struct LoadingState {
+    progress: Option<ProgressCounter>,
+    assets: Option<ASSETS>,
+    levels: Vec<String>,
+}
+
+impl LoadingState {
+    fn with_levels(directory: Directory, path: &str) -> amethyst::Result<Self> {
+        let val = directory.load(path)?;
+        let mut de = ron::de::Deserializer::from_bytes(&val)?;
+        let levels = Vec::<String>::deserialize(&mut de)?;
+        de.end()?;
+
+        Ok(LoadingState {
+            progress: None,
+            assets: None,
+            levels,
+        })
+    }
+}
+
 impl SimpleState for LoadingState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         data.world.register::<PhysicsHandle>();
@@ -166,10 +178,15 @@ impl SimpleState for LoadingState {
 
         let mut progress_counter = ProgressCounter::new();
         let sprites = load_spritesheet(data.world, "Sprites", &mut progress_counter);
+        let levels = self
+            .levels
+            .iter()
+            .map(|path| load_level(data.world, path.to_string(), &mut progress_counter))
+            .collect();
         // let main_theme = load_sound_file(data.world, "MainTheme.wav", &mut progress_counter);
 
         self.progress = Some(progress_counter);
-        self.assets = Some((SpriteStorage { sprites },));
+        self.assets = Some((SpriteStorage { sprites }, LevelStorage { levels }));
     }
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
@@ -182,6 +199,15 @@ impl SimpleState for LoadingState {
                 // }));
                 return SimpleTrans::Switch(Box::new(GameplayState {
                     assets: self.assets.clone().unwrap(),
+                    level: self
+                        .assets
+                        .clone()
+                        .unwrap()
+                        .1
+                        .levels
+                        .get(0)
+                        .unwrap()
+                        .clone(),
                 }));
             }
         }
@@ -196,10 +222,12 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("assets/display.ron");
     let input_path = app_root.join("assets/input.ron");
+    let levels_path = app_root.join("levels.ron");
 
     let assets_dir = app_root.join("assets/");
 
     let game_data = GameDataBuilder::default()
+        .with(Processor::<Level>::new(), "level_loader", &[])
         .with_bundle(TransformBundle::new())?
         .with_bundle(
             amethyst::input::InputBundle::<amethyst::input::StringBindings>::new()
@@ -222,7 +250,11 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(FpsCounterBundle)?
         .with_bundle(UiBundle::<amethyst::input::StringBindings>::new())?;
 
-    let mut game = Application::new(assets_dir, LoadingState::default(), game_data)?;
+    let mut game = Application::new(
+        assets_dir,
+        LoadingState::with_levels(Directory::new("assets"), "levels.ron")?,
+        game_data,
+    )?;
     game.run();
 
     Ok(())

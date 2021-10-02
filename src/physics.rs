@@ -1,4 +1,5 @@
 use amethyst::core::bundle::SystemBundle;
+use amethyst::core::Time;
 use amethyst::ecs::*;
 use amethyst::error::Error;
 use amethyst::shrev::EventChannel;
@@ -110,6 +111,17 @@ impl Physics {
     }
 
     pub fn step(&mut self) {
+        self.mech_world.step(
+            &mut self.geo_world,
+            &mut self.bodies,
+            &mut self.colliders,
+            &mut self.joint_constraints,
+            &mut self.force_generators,
+        )
+    }
+
+    pub fn step_with_timestep(&mut self, timestep: N) {
+        self.mech_world.set_timestep(timestep);
         self.mech_world.step(
             &mut self.geo_world,
             &mut self.bodies,
@@ -383,7 +395,6 @@ impl Physics {
 impl Default for Physics {
     fn default() -> Self {
         let mut mech_world = DefaultMechanicalWorld::new(Vector2::new(0.0, 0.0));
-        // mech_world.set_timestep(N::from_f32(1.0 / 30.0).unwrap());
         Self {
             mech_world,
             geo_world: DefaultGeometricalWorld::new(),
@@ -404,13 +415,14 @@ impl<'s> System<'s> for PhysicsSystem {
         WriteStorage<'s, Transform>,
         Write<'s, EventChannel<PhysicsContactEvent>>,
         Write<'s, EventChannel<PhysicsProximityEvent>>,
+        Read<'s, Time>,
     );
 
     fn run(
         &mut self,
-        (mut physics, handles, mut transforms, mut c_events, mut p_events): Self::SystemData,
+        (mut physics, handles, mut transforms, mut c_events, mut p_events, time): Self::SystemData,
     ) {
-        physics.step();
+        physics.step_with_timestep(time.delta_seconds().clamp(1.0 / 60.0, 1.0 / 15.0));
         for (handle, transform) in (&handles, &mut transforms).join() {
             if let Some(position) = physics.get_position(handle) {
                 let x = position.translation.x;
@@ -538,7 +550,6 @@ impl<'a, 'b> SystemBundle<'a, 'b> for PhysicsBundle {
         dispatcher.add(PhysicsSpawningSystem, "physics_spawn", &[]);
         dispatcher.add(PhysicsSystem, "physics", &["physics_spawn"]);
         dispatcher.add(PhysicsDeletionSystem, "physics_delete", &[]);
-        // dispatcher.add(BounceSystem, "bounce", &[]);
         Ok(())
     }
 }

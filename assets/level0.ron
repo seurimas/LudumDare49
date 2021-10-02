@@ -1,0 +1,13 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (2000.0, 2000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    asteroids: [AsteroidDesc(
+        normal: 200,
+        bombs: 30,
+    ), AsteroidDesc(
+        location: (200.0, 200.0, 200.0, 200.0),
+        bombs: 10,
+    )],
+)

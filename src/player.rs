@@ -13,8 +13,9 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
     assets::SpriteStorage,
+    delivery::PlayerDeliverySystem,
     physics::{Physics, PhysicsDesc, PhysicsHandle},
-    tractor::PlayerTractorSystem,
+    tractor::{PlayerTractorSystem, TractorGravitySystem},
 };
 
 #[derive(Debug, PartialEq)]
@@ -113,6 +114,8 @@ impl<'a, 'b> SystemBundle<'a, 'b> for PlayerBundle {
     ) -> Result<(), Error> {
         dispatcher.add(PlayerMovementSystem, "player_movement", &[]);
         dispatcher.add(PlayerTractorSystem, "player_tractor", &[]);
+        dispatcher.add(PlayerDeliverySystem, "player_delivery", &[]);
+        dispatcher.add(TractorGravitySystem, "tractor_gravity", &[]);
         Ok(())
     }
 }

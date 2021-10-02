@@ -9,7 +9,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{assets::SpriteStorage, physics::PhysicsDesc};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum AsteroidSize {
     Big,
     Medium,
@@ -42,10 +42,10 @@ impl AsteroidSize {
     }
     pub fn get_mass(&self) -> f32 {
         match self {
-            AsteroidSize::Big => 50.0,
-            AsteroidSize::Medium => 25.0,
-            AsteroidSize::Small => 10.0,
-            AsteroidSize::Bitty => 5.0,
+            AsteroidSize::Big => 20.0,
+            AsteroidSize::Medium => 10.0,
+            AsteroidSize::Small => 5.0,
+            AsteroidSize::Bitty => 4.0,
         }
     }
 }
@@ -65,5 +65,6 @@ pub fn generate_asteroid(
         .with(SpriteRender::new(sprites, size.get_sprite_num()))
         .with(PhysicsDesc::new(body, collider))
         .with(transform)
+        .with(Asteroid { size })
         .build();
 }

@@ -6,17 +6,25 @@ use amethyst::{
     ecs::*,
     input::{InputHandler, StringBindings},
     prelude::*,
-    renderer::{sprite::SpriteSheetHandle, ActiveCamera, Camera, SpriteRender},
+    renderer::{
+        palette::Srgb, resources::Tint, sprite::SpriteSheetHandle, ActiveCamera, Camera,
+        SpriteRender,
+    },
     window::ScreenDimensions,
     winit::MouseButton,
 };
 
-use crate::{assets::SpriteStorage, physics::PhysicsDesc};
+use crate::{
+    assets::SpriteStorage,
+    asteroid::Asteroid,
+    physics::{Physics, PhysicsDesc, PhysicsHandle},
+};
 
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Tractor {
     pub strength: f32,
+    pub attenuation: f32,
 }
 
 const TRACTOR_SPRITE: usize = 5;
@@ -29,7 +37,10 @@ fn init_tractor(builder: impl Builder, sprites: SpriteSheetHandle, location: Poi
     );
     let mut builder = builder
         .with(transform)
-        .with(Tractor { strength: 100.0 })
+        .with(Tractor {
+            strength: 100.0,
+            attenuation: 100.0,
+        })
         .with(SpriteRender::new(sprites, TRACTOR_SPRITE))
         .build();
 }
@@ -84,12 +95,19 @@ impl<'s> System<'s> for PlayerTractorSystem {
             let entity = entity.clone();
             if input.mouse_button_is_down(MouseButton::Left) {
                 if let Some(location) = location {
-                    println!("Moving!");
                     move_tractor(entity, tractor, &mut transforms, location);
                 }
             } else {
-                println!("Dying");
                 entities.delete(entity);
+            }
+
+            let strength_change = input.axis_value("strength");
+            let attenuation_change = input.axis_value("attenuation");
+            if let (Some(strength_change), Some(attenuation_change)) =
+                (strength_change, attenuation_change)
+            {
+                tractor.strength += strength_change;
+                tractor.attenuation += attenuation_change;
             }
         } else if input.mouse_button_is_down(MouseButton::Left) {
             if let Some(location) = location {
@@ -99,6 +117,56 @@ impl<'s> System<'s> for PlayerTractorSystem {
                     sprites.unwrap().sprites.clone(),
                     location,
                 );
+            }
+        }
+    }
+}
+
+pub struct TractorGravitySystem;
+impl<'s> System<'s> for TractorGravitySystem {
+    type SystemData = (
+        ReadStorage<'s, Tractor>,
+        ReadStorage<'s, Transform>,
+        ReadStorage<'s, PhysicsHandle>,
+        ReadStorage<'s, Asteroid>,
+        WriteStorage<'s, Tint>,
+        Entities<'s>,
+        Write<'s, Physics>,
+    );
+
+    fn run(
+        &mut self,
+        (tractors, transforms, handles, asteroids, mut tints, entities, mut physics): Self::SystemData,
+    ) {
+        for (tractor, transform) in (&tractors, &transforms).join() {
+            for (handle, _asteroid, entity) in (&handles, &asteroids, &entities).join() {
+                let location = transform.translation();
+                if let Some(asteroid_location) = physics.get_location(handle) {
+                    let difference = nalgebra::Vector2::new(
+                        location.x - asteroid_location.x,
+                        location.y - asteroid_location.y,
+                    );
+                    let distance = difference.magnitude();
+                    let mut strength = tractor.strength;
+                    if distance > 250.0 {
+                        tints.remove(entity);
+                    } else if distance > 50.0 {
+                        tints.insert(entity, Tint(Srgb::new(1.0, 0.0, 0.0).into()));
+                        strength = strength * 5.0;
+                        physics.apply_dampening(handle, 1.0);
+                    } else if distance > 5.0 {
+                        tints.insert(entity, Tint(Srgb::new(0.0, 1.0, 0.0).into()));
+                        physics.apply_dampening(handle, 5.0);
+                    } else {
+                        tints.insert(entity, Tint(Srgb::new(0.0, 0.0, 1.0).into()));
+                        strength = 0.0;
+                        physics.apply_dampening(handle, 10.0);
+                    }
+                    physics.apply_velocity_change(
+                        handle,
+                        difference * (strength / distance / distance),
+                    );
+                }
             }
         }
     }

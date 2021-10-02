@@ -227,6 +227,21 @@ impl Physics {
         }
     }
 
+    pub fn apply_dampening(&mut self, handle: &PhysicsHandle, mag: N) {
+        if let Some(current_vel) = self.get_velocity(handle) {
+            if let Some(handle) = handle.body {
+                if let Some(body) = self.bodies.get_mut(handle) {
+                    body.apply_force(
+                        0,
+                        &Force::linear(-current_vel * mag / (1.0 + mag)),
+                        ForceType::AccelerationChange,
+                        true,
+                    );
+                }
+            }
+        }
+    }
+
     pub fn apply_velocity_change(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
         if let Some(handle) = handle.body {
             if let Some(body) = self.bodies.get_mut(handle) {
@@ -242,7 +257,6 @@ impl Physics {
     pub fn apply_force(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
         if let Some(handle) = handle.body {
             if let Some(body) = self.bodies.get_mut(handle) {
-                println!("Applying force...");
                 body.apply_force(0, &Force::linear(vec), ForceType::Force, true);
             }
         }
@@ -251,7 +265,6 @@ impl Physics {
     pub fn apply_impulse(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
         if let Some(handle) = handle.body {
             if let Some(body) = self.bodies.get_mut(handle) {
-                println!("Applying force...");
                 body.apply_force(0, &Force::linear(vec), ForceType::Impulse, true)
             }
         }

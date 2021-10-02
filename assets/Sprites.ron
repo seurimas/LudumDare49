@@ -44,5 +44,30 @@ List((
       height: 24,
       width: 24,
     ),
+  /* 6-9: Delivery Zone */
+    (
+      x: 72,
+      y: 0,
+      height: 12,
+      width: 12,
+    ),
+    (
+      x: 84,
+      y: 0,
+      height: 12,
+      width: 12,
+    ),
+    (
+      x: 72,
+      y: 12,
+      height: 12,
+      width: 12,
+    ),
+    (
+      x: 84,
+      y: 12,
+      height: 12,
+      width: 12,
+    ),
   ],
 ))

@@ -7,10 +7,17 @@
       "leftright": Emulated(
         pos: Key(D),
         neg: Key(A),
-        )
+        ),
+      "attenuation": Emulated(
+        pos: Key(Key1),
+        neg: Key(Key2),
+        ),
+      "strength": Emulated(
+        pos: Key(Key3),
+        neg: Key(Key4),
+        ),
   },
   actions: {
-    "attack": [ [Mouse(Left)], [Key(Space)] ],
-    "interact": [ [Mouse(Right)], [Key(E)] ],
+    "deliver": [[Key(Q)]],
   }
 )

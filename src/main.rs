@@ -17,8 +17,11 @@ use assets::{load_sound_file, load_spritesheet, SoundStorage, SpriteStorage};
 use asteroid::{generate_asteroid, AsteroidSize};
 use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
+
+use crate::delivery::generate_delivery_zone;
 mod assets;
 mod asteroid;
+mod delivery;
 mod physics;
 mod player;
 mod tractor;
@@ -49,6 +52,11 @@ impl SimpleState for GameplayState {
             let sprites = data.world.read_resource::<SpriteStorage>();
             sprites.sprites.clone()
         };
+        transform.set_translation_x(0.0);
+        transform.set_translation_y(0.0);
+        generate_delivery_zone(data.world, (100.0, 100.0), transform.clone());
+        transform.set_translation_x(200.0);
+        transform.set_translation_y(200.0);
         generate_asteroid(
             data.world.create_entity(),
             spritesheet.clone(),
@@ -59,10 +67,52 @@ impl SimpleState for GameplayState {
         generate_asteroid(
             data.world.create_entity(),
             spritesheet.clone(),
-            AsteroidSize::Big,
+            AsteroidSize::Medium,
             transform.clone(),
         );
         transform.move_left(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Small,
+            transform.clone(),
+        );
+        transform.move_left(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Bitty,
+            transform.clone(),
+        );
+        transform.move_up(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Big,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Medium,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Small,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Bitty,
+            transform.clone(),
+        );
+        transform.move_up(10.0);
         generate_asteroid(
             data.world.create_entity(),
             spritesheet.clone(),
@@ -72,8 +122,50 @@ impl SimpleState for GameplayState {
         transform.move_left(10.0);
         generate_asteroid(
             data.world.create_entity(),
-            spritesheet,
+            spritesheet.clone(),
+            AsteroidSize::Medium,
+            transform.clone(),
+        );
+        transform.move_left(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Small,
+            transform.clone(),
+        );
+        transform.move_left(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Bitty,
+            transform.clone(),
+        );
+        transform.move_up(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
             AsteroidSize::Big,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Medium,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Small,
+            transform.clone(),
+        );
+        transform.move_right(10.0);
+        generate_asteroid(
+            data.world.create_entity(),
+            spritesheet.clone(),
+            AsteroidSize::Bitty,
             transform.clone(),
         );
         // initialize_tile_world(data.world);

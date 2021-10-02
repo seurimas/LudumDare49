@@ -5,7 +5,7 @@ use amethyst::{
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, SpriteRender},
 };
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
@@ -13,6 +13,7 @@ use crate::{
     assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
     economy::Enterprise,
+    particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     player::Player,
 };
@@ -31,6 +32,8 @@ pub enum DeliveryCorner {
 pub struct DeliveryZone {
     cooldown: Option<f32>,
     arrow_distance: f32,
+    size: (f32, f32),
+    corners: Vec<Entity>,
 }
 
 #[derive(Component, Debug)]
@@ -62,7 +65,7 @@ pub fn generate_delivery_corner(
     position: DeliveryCorner,
     size: (f32, f32),
     mut transform: Transform,
-) {
+) -> Entity {
     let body = RigidBodyDesc::new().status(BodyStatus::Static);
     let shape = ShapeHandle::new(Cuboid::new(Vector2::new(6.0, 6.0)));
     let collider = ColliderDesc::new(shape);
@@ -74,7 +77,7 @@ pub fn generate_delivery_corner(
         .with(PhysicsDesc::new(body, collider))
         .with(transform)
         // .with(position)
-        .build();
+        .build()
 }
 
 pub fn generate_delivery_zone(world: &mut World, size: (f32, f32), transform: Transform) {
@@ -82,22 +85,23 @@ pub fn generate_delivery_zone(world: &mut World, size: (f32, f32), transform: Tr
         let sprites = world.read_resource::<SpriteStorage>();
         sprites.sprites.clone()
     };
-    for position in vec![
+    let corners = vec![
         DeliveryCorner::TopLeft,
         DeliveryCorner::TopRight,
         DeliveryCorner::BottomLeft,
         DeliveryCorner::BottomRight,
     ]
-    .drain(..)
-    {
+    .iter()
+    .map(|position| {
         generate_delivery_corner(
             world.create_entity(),
             spritesheet.clone(),
-            position,
+            *position,
             size,
             transform.clone(),
-        );
-    }
+        )
+    })
+    .collect::<Vec<Entity>>();
     let body = RigidBodyDesc::new().status(BodyStatus::Static);
     let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0 / 2.0, size.1 / 2.0)));
     let collider = ColliderDesc::new(shape).sensor(true);
@@ -108,18 +112,51 @@ pub fn generate_delivery_zone(world: &mut World, size: (f32, f32), transform: Tr
         .with(DeliveryZone {
             cooldown: None,
             arrow_distance: 200.0,
+            corners,
+            size,
         })
         .build();
 }
 
-pub struct DeliveryCooldownSystem;
-impl<'s> System<'s> for DeliveryCooldownSystem {
-    type SystemData = (WriteStorage<'s, DeliveryZone>, Read<'s, Time>);
+const DELIVERY_TIMESTEPS: [(f32, f32); 4] = [(1.0, 0.9), (2.0, 0.8), (3.0, 0.7), (5.0, 0.4)];
 
-    fn run(&mut self, (mut deliveries, time): Self::SystemData) {
-        for delivery in (&mut deliveries).join() {
+pub struct DeliveryAnimationSystem;
+impl<'s> System<'s> for DeliveryAnimationSystem {
+    type SystemData = (
+        WriteStorage<'s, DeliveryZone>,
+        ReadStorage<'s, Transform>,
+        Read<'s, LazyUpdate>,
+        Read<'s, Time>,
+        Entities<'s>,
+        SpriteRes<'s>,
+    );
+
+    fn run(
+        &mut self,
+        (mut deliveries, transforms, update, time, entities, sprites): Self::SystemData,
+    ) {
+        for (delivery, transform) in (&mut deliveries, &transforms).join() {
             delivery.cooldown = delivery.cooldown.and_then(|cooldown| {
                 if cooldown > time.delta_seconds() {
+                    for (timestep, particle_chance) in DELIVERY_TIMESTEPS {
+                        if cooldown < timestep {
+                            if rand::random::<f32>() > particle_chance {
+                                let center_location = transform.translation();
+                                let mut direction = random_direction();
+                                direction /= f32::max(direction.x.abs(), direction.y.abs());
+                                emit_particle(
+                                    update.create_entity(&entities),
+                                    sprites.get_handle(),
+                                    Particle::delivery(direction),
+                                    Point2::new(
+                                        center_location.x - direction.x * delivery.size.0 / 2.0,
+                                        center_location.y - direction.y * delivery.size.1 / 2.0,
+                                    ),
+                                );
+                            }
+                            break;
+                        }
+                    }
                     Some(cooldown - time.delta_seconds())
                 } else {
                     None

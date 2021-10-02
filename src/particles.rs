@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use amethyst::{
     core::{SystemBundle, Time, Transform},
     ecs::*,
@@ -12,6 +14,7 @@ pub enum ParticleType {
     TractorHeavy,
     TractorLight,
     TractorPull,
+    Delivery,
 }
 
 #[derive(Component, Debug)]
@@ -52,13 +55,42 @@ impl Particle {
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
+    pub fn delivery(direction: Vector2<f32>) -> Self {
+        Particle {
+            my_type: ParticleType::Delivery,
+            lifetime: 0.3,
+            velocity: (rand::random::<f32>() * 30.0 + 30.0, 0.0),
+            delta_velocity: (rand::random::<f32>() * 30.0, 0.0),
+            rotation: f32::atan2(direction.y, direction.x),
+        }
+    }
     fn get_sprite_num(&self) -> usize {
         match self.my_type {
             ParticleType::TractorHeavy => 12,
             ParticleType::TractorLight => 13,
             ParticleType::TractorPull => 14,
+            ParticleType::Delivery => {
+                if rand::random() {
+                    if rand::random() {
+                        33
+                    } else {
+                        34
+                    }
+                } else {
+                    if rand::random() {
+                        35
+                    } else {
+                        36
+                    }
+                }
+            }
         }
     }
+}
+
+pub fn random_direction() -> Vector2<f32> {
+    let rotation = rand::random::<f32>() * PI * 2.0;
+    Vector2::new(f32::cos(rotation), f32::sin(rotation))
 }
 
 pub fn emit_particle(

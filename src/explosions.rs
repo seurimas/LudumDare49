@@ -113,8 +113,10 @@ impl<'s> System<'s> for ExplosionForceSystem {
                         if distance < 10.0 {
                             distance = 10.0;
                         }
-                        physics
-                            .apply_impulse(handle, difference * (*strength / distance / distance));
+                        physics.apply_impulse(
+                            handle,
+                            difference * (*strength / distance / distance / distance),
+                        );
                     }
                 }
                 *explosion = Explosion::Expanding { time: 0.0 };

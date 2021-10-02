@@ -19,7 +19,7 @@ use amethyst::{
 use crate::{
     assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
-    particles::{emit_particle, Particle},
+    particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
 };
 
@@ -141,8 +141,7 @@ impl<'s> System<'s> for TractorGravitySystem {
         for (tractor, transform) in (&tractors, &transforms).join() {
             if rand::random::<f32>() > 0.1 {
                 let translation = transform.translation();
-                let rotation = rand::random::<f32>() * PI * 2.0;
-                let direction = nalgebra::Vector2::new(f32::cos(rotation), f32::sin(rotation));
+                let direction = random_direction();
                 emit_particle(
                     update.create_entity(&entities),
                     sprites.get_handle(),

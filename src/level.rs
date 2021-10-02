@@ -17,7 +17,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 use crate::{
     assets::LevelStorage,
     asteroid::{generate_asteroid_field, Asteroid},
-    delivery::{generate_delivery_zone, DeliveryCooldownSystem},
+    delivery::{generate_delivery_zone, DeliveryAnimationSystem},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
 };
@@ -284,7 +284,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LevelBundle {
         dispatcher: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         dispatcher.add(DummySystem, "boundary_dummy", &[]);
-        dispatcher.add(DeliveryCooldownSystem, "delivery_cooldown", &[]);
+        dispatcher.add(DeliveryAnimationSystem, "delivery_animation", &[]);
         dispatcher.add(
             AsteroidReintroductionSystem::default(),
             "asteroid_reintroduction",

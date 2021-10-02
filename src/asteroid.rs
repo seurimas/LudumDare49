@@ -88,7 +88,7 @@ impl AsteroidType {
     }
     pub fn explodes(&self, other: Self) -> Option<f32> {
         match (self, other) {
-            (AsteroidType::Bomb, AsteroidType::Bomb) => Some(50000.0),
+            (AsteroidType::Bomb, AsteroidType::Bomb) => Some(500_000.0),
             _ => None,
         }
     }

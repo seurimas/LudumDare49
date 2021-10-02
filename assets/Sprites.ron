@@ -214,5 +214,30 @@ List((
       height: 11,
       width: 11,
     ),
+  /* 33-36: Delivery Particles */
+    (
+      x: 44,
+      y: 9,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 13,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 17,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 21,
+      height: 4,
+      width: 4,
+    ),
   ],
 ))

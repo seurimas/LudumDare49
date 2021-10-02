@@ -1,0 +1,48 @@
+List((
+  texture_width: 512,
+  texture_height: 512,
+  sprites: [
+  /* 0: Spachship */
+    (
+      x: 0,
+      y: 0,
+      height: 24,
+      width: 24,
+    ),
+  /* 1: Big Asteroid */
+    (
+      x: 24,
+      y: 0,
+      height: 9,
+      width: 9,
+    ),
+  /* 2: Medium Asteroid */
+    (
+      x: 33,
+      y: 0,
+      height: 7,
+      width: 7,
+    ),
+  /* 3: Small Asteroid */
+    (
+      x: 40,
+      y: 0,
+      height: 5,
+      width: 5,
+    ),
+  /* 4: Bitty Asteroid */
+    (
+      x: 45,
+      y: 0,
+      height: 3,
+      width: 3,
+    ),
+  /* 5: Tractor */
+    (
+      x: 48,
+      y: 0,
+      height: 24,
+      width: 24,
+    ),
+  ],
+))

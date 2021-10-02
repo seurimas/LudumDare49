@@ -219,6 +219,14 @@ impl Physics {
         }
     }
 
+    pub fn set_angular_velocity(&mut self, handle: &PhysicsHandle, rotational: N) {
+        if let Some(handle) = handle.body {
+            if let Some(rigid_body) = self.bodies.rigid_body_mut(handle) {
+                rigid_body.set_angular_velocity(rotational);
+            }
+        }
+    }
+
     pub fn apply_velocity_change(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
         if let Some(handle) = handle.body {
             if let Some(body) = self.bodies.get_mut(handle) {
@@ -231,9 +239,19 @@ impl Physics {
         }
     }
 
+    pub fn apply_force(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
+        if let Some(handle) = handle.body {
+            if let Some(body) = self.bodies.get_mut(handle) {
+                println!("Applying force...");
+                body.apply_force(0, &Force::linear(vec), ForceType::Force, true);
+            }
+        }
+    }
+
     pub fn apply_impulse(&mut self, handle: &PhysicsHandle, vec: Vector2<N>) {
         if let Some(handle) = handle.body {
             if let Some(body) = self.bodies.get_mut(handle) {
+                println!("Applying force...");
                 body.apply_force(0, &Force::linear(vec), ForceType::Impulse, true)
             }
         }

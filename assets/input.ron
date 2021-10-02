@@ -1,0 +1,16 @@
+(
+  axes: {
+    "updown": Emulated(
+      pos: Key(W),
+      neg: Key(S)
+      ),
+      "leftright": Emulated(
+        pos: Key(D),
+        neg: Key(A),
+        )
+  },
+  actions: {
+    "attack": [ [Mouse(Left)], [Key(Space)] ],
+    "interact": [ [Mouse(Right)], [Key(E)] ],
+  }
+)

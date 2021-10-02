@@ -23,10 +23,12 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct AsteroidDesc {
-    location: Option<(f32, f32, f32, f32)>,
-    normal: Option<usize>,
-    bombs: Option<usize>,
+pub enum AsteroidDesc {
+    Field {
+        location: Option<(f32, f32, f32, f32)>,
+        normal: Option<usize>,
+        bombs: Option<usize>,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -132,21 +134,27 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
         println!("{:?}", transform);
         generate_delivery_zone(world, (75.0, 75.0), transform);
     }
-    for asteroid_field in level.asteroids {
-        let mut transform = Transform::default();
-        let location =
-            asteroid_field
-                .location
-                .unwrap_or((0.0, 0.0, level.boundaries.0, level.boundaries.1));
-        transform.set_translation_x(location.0);
-        transform.set_translation_y(location.1);
-        generate_asteroid_field(
-            world,
-            (location.2, location.3),
-            asteroid_field.normal.unwrap_or_default(),
-            asteroid_field.bombs.unwrap_or_default(),
-            transform,
-        );
+    for asteroid_desc in level.asteroids {
+        match asteroid_desc {
+            AsteroidDesc::Field {
+                location,
+                normal,
+                bombs,
+            } => {
+                let mut transform = Transform::default();
+                let location =
+                    location.unwrap_or((0.0, 0.0, level.boundaries.0, level.boundaries.1));
+                transform.set_translation_x(location.0);
+                transform.set_translation_y(location.1);
+                generate_asteroid_field(
+                    world,
+                    (location.2, location.3),
+                    normal.unwrap_or_default(),
+                    bombs.unwrap_or_default(),
+                    transform,
+                );
+            }
+        }
     }
     generate_boundaries(world, level.boundaries);
 }

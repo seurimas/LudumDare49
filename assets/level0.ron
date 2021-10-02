@@ -3,10 +3,10 @@ Level(
     boundaries: (2000.0, 2000.0),
     player_state: (0.0, 0.0),
     deliveries: [(0.0, 0.0)],
-    asteroids: [AsteroidDesc(
+    asteroids: [Field(
         normal: 200,
         bombs: 30,
-    ), AsteroidDesc(
+    ), Field(
         location: (200.0, 200.0, 200.0, 200.0),
         bombs: 10,
     )],

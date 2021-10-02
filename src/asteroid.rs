@@ -64,6 +64,12 @@ impl AsteroidType {
             AsteroidType::Bomb => 20.0,
         }
     }
+    pub fn explodes(&self, other: Self) -> Option<f32> {
+        match (self, other) {
+            (AsteroidType::Bomb, AsteroidType::Bomb) => Some(50000.0),
+            _ => None,
+        }
+    }
 }
 
 pub fn generate_asteroid(
@@ -192,8 +198,8 @@ impl<'s> System<'s> for AsteroidExplosionSystem {
                             if let (Some(asteroid_a), Some(asteroid_b)) =
                                 (asteroids.get(*a), asteroids.get(*b))
                             {
-                                if asteroid_a.my_type == asteroid_b.my_type
-                                    && asteroid_a.my_type == AsteroidType::Bomb
+                                if let Some(strength) =
+                                    asteroid_a.my_type.explodes(asteroid_b.my_type)
                                 {
                                     if let Some((Some(location_a), Some(location_b))) = handles
                                         .get(*a)
@@ -217,6 +223,7 @@ impl<'s> System<'s> for AsteroidExplosionSystem {
                                             update.create_entity(&entities),
                                             sprites.get_handle(),
                                             transform,
+                                            strength,
                                         );
                                     }
                                     entities.delete(*a);

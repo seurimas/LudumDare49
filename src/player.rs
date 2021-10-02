@@ -39,7 +39,7 @@ fn standard_camera() -> Camera {
 fn initialize_camera(builder: impl Builder, player: &Entity) -> Entity {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
-    transform.set_translation_xyz(0.0, 0.0, 1.0);
+    transform.set_translation_xyz(0.0, 0.0, 100.0);
 
     builder
         .with(standard_camera())

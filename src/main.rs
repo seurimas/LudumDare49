@@ -24,6 +24,7 @@ use assets::{
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
 use level::{generate_boundaries, initialize_level, Level, LevelBundle, LevelHandle};
+use particles::ParticleBundle;
 use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
 use serde::Deserialize;
@@ -34,6 +35,7 @@ mod asteroid;
 mod delivery;
 mod explosions;
 mod level;
+mod particles;
 mod physics;
 mod player;
 mod tractor;
@@ -245,6 +247,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PhysicsBundle)?
         .with_bundle(AsteroidBundle)?
+        .with_bundle(ParticleBundle)?
         .with_bundle(LevelBundle)?
         .with_bundle(PlayerBundle)?
         .with_bundle(FpsCounterBundle)?

@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use amethyst::{
     core::{
         math::{Point3, Translation3, UnitQuaternion, Vector2, Vector3},
@@ -15,8 +17,9 @@ use amethyst::{
 };
 
 use crate::{
-    assets::SpriteStorage,
+    assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
+    particles::{emit_particle, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
 };
 
@@ -41,7 +44,6 @@ fn init_tractor(builder: impl Builder, sprites: SpriteSheetHandle, location: Poi
             strength: 100.0,
             attenuation: 100.0,
         })
-        .with(SpriteRender::new(sprites, TRACTOR_SPRITE))
         .build();
 }
 
@@ -129,16 +131,31 @@ impl<'s> System<'s> for TractorGravitySystem {
         ReadStorage<'s, Transform>,
         ReadStorage<'s, PhysicsHandle>,
         ReadStorage<'s, Asteroid>,
-        WriteStorage<'s, Tint>,
+        Read<'s, LazyUpdate>,
         Entities<'s>,
         Write<'s, Physics>,
+        SpriteRes<'s>,
     );
 
     fn run(
         &mut self,
-        (tractors, transforms, handles, asteroids, mut tints, entities, mut physics): Self::SystemData,
+        (tractors, transforms, handles, asteroids, update, entities, mut physics, sprites): Self::SystemData,
     ) {
         for (tractor, transform) in (&tractors, &transforms).join() {
+            if rand::random::<f32>() > 0.1 {
+                let translation = transform.translation();
+                let rotation = rand::random::<f32>() * PI * 2.0;
+                let direction = nalgebra::Vector2::new(f32::cos(rotation), f32::sin(rotation));
+                emit_particle(
+                    update.create_entity(&entities),
+                    sprites.get_handle(),
+                    Particle::tractor_pull(direction),
+                    nalgebra::Point2::new(
+                        translation.x - direction.x * 15.0,
+                        translation.y - direction.y * 15.0,
+                    ),
+                );
+            }
             for (handle, _asteroid, entity) in (&handles, &asteroids, &entities).join() {
                 let location = transform.translation();
                 if let Some(asteroid_location) = physics.get_location(handle) {
@@ -150,16 +167,28 @@ impl<'s> System<'s> for TractorGravitySystem {
                     let mut strength = tractor.strength;
                     if distance > 100.0 {
                         strength = 0.0;
-                        tints.remove(entity);
                     } else if distance > 50.0 {
-                        tints.insert(entity, Tint(Srgb::new(1.0, 0.0, 0.0).into()));
+                        if rand::random::<f32>() > 0.9 {
+                            emit_particle(
+                                update.create_entity(&entities),
+                                sprites.get_handle(),
+                                Particle::tractor_heavy(difference.normalize()),
+                                asteroid_location,
+                            );
+                        }
                         strength = strength * 5.0;
                         physics.apply_dampening(handle, 1.0);
                     } else if distance > 5.0 {
-                        tints.insert(entity, Tint(Srgb::new(0.0, 1.0, 0.0).into()));
+                        if rand::random::<f32>() > 0.9 {
+                            emit_particle(
+                                update.create_entity(&entities),
+                                sprites.get_handle(),
+                                Particle::tractor_light(difference.normalize()),
+                                asteroid_location,
+                            );
+                        }
                         physics.apply_dampening(handle, 5.0);
                     } else {
-                        tints.insert(entity, Tint(Srgb::new(0.0, 0.0, 1.0).into()));
                         strength = 0.0;
                         physics.apply_dampening(handle, 10.0);
                     }

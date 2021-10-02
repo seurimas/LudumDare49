@@ -104,6 +104,7 @@ impl<'s> System<'s> for ExplosionForceSystem {
                                         *strength,
                                     );
                                 }
+                                _ => {}
                             }
                             if changed_size {
                                 update.exec(resize_asteroid(entity));

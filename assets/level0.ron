@@ -9,5 +9,8 @@ Level(
     ), Field(
         location: (200.0, 200.0, 200.0, 200.0),
         bombs: 10,
+    ), Field(
+        location: (-200.0, -200.0, 200.0, 200.0),
+        gases: 10,
     )],
 )

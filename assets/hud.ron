@@ -1,0 +1,191 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "hud",
+        anchor: Middle,
+        stretch: XY( x_margin: 0, y_margin: 0, keep_aspect_ratio: false ),
+
+        z: 1.0,
+    ),
+    children: [
+        Container(
+            transform: (
+                id: "popup_warnings",
+                x: 0,
+                y: 54,
+                width: 224.0,
+                height: 44.0,
+                anchor: BottomMiddle,
+            ),
+            children: [
+                Image(
+                    transform: (
+                        id: "insufficient_funds",
+                        anchor: Middle,
+                        x: 0,
+                        y: 0,
+                        width: 224,
+                        height: 44,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+            ]
+        ),
+        Container(
+            transform: (
+                id: "money",
+                x: 106,
+                y: -21,
+                width: 192.0,
+                height: 22.0,
+                anchor: TopLeft,
+            ),
+            background: SolidColor(0.0, 0.2, 0.4, 1.0),
+            children: [
+                Image(
+                    transform: (
+                        id: "money_symbol",
+                        anchor: MiddleLeft,
+                        x: 8,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_0",
+                        anchor: MiddleRight,
+                        x: -8,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_1",
+                        anchor: MiddleRight,
+                        x: -24,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_2",
+                        anchor: MiddleRight,
+                        x: -40,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_3",
+                        anchor: MiddleRight,
+                        x: -56,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_4",
+                        anchor: MiddleRight,
+                        x: -72,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_5",
+                        anchor: MiddleRight,
+                        x: -88,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_6",
+                        anchor: MiddleRight,
+                        x: -104,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_7",
+                        anchor: MiddleRight,
+                        x: -120,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_8",
+                        anchor: MiddleRight,
+                        x: -136,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_9",
+                        anchor: MiddleRight,
+                        x: -152,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_10",
+                        anchor: MiddleRight,
+                        x: -168,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "sufficient_funds",
+                        anchor: MiddleRight,
+                        x: 12,
+                        y: 0,
+                        width: 24,
+                        height: 33,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+            ]
+        )
+    ]
+)

@@ -176,6 +176,13 @@ impl Physics {
             .map(|vector| Point2::new(vector.x, vector.y))
     }
 
+    pub fn get_mass(&self, handle: &PhysicsHandle) -> Option<f32> {
+        handle
+            .body
+            .and_then(|handle| self.bodies.rigid_body(handle))
+            .map(|rigid_body| rigid_body.augmented_mass().linear)
+    }
+
     pub fn set_location(&mut self, handle: &PhysicsHandle, x: N, y: N) {
         if let Some(handle) = handle.body {
             if let Some(rigid_body) = self.bodies.rigid_body_mut(handle) {
@@ -461,7 +468,6 @@ impl<'s> System<'s> for PhysicsSpawningSystem {
                 let phys_handle = PhysicsHandle::new(handle, collider_handle);
                 if let Some(transform) = transforms.get(entity) {
                     let translation = transform.translation();
-                    println!("S {} {}", translation.x, translation.y);
                     physics.set_location(&phys_handle, translation.x as f32, translation.y as f32);
                 } else {
                     transforms.insert(entity, Transform::default());
@@ -472,7 +478,6 @@ impl<'s> System<'s> for PhysicsSpawningSystem {
                 if parent.entity == entity {
                     if let Some(handle) = handles.get(entity) {
                         if attached.handle.is_none() {
-                            println!("Adding sensor!");
                             let sensor_handle =
                                 physics.add_child_collider(handle, &attached.collider);
                             attached.set_handle((handle.body.unwrap(), sensor_handle));

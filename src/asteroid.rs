@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use amethyst::{
     core::{SystemBundle, Transform},
     ecs::*,
@@ -18,13 +20,19 @@ use crate::{
     physics::{Physics, PhysicsContactEvent, PhysicsDesc, PhysicsHandle},
 };
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
 pub enum AsteroidType {
-    Bomb,
+    // Mineral
     Big,
     Medium,
     Small,
     Bitty,
+    // Explosive
+    Bomb,
+    // Reactive
+    Hydrogen,
+    Oxygen,
+    Water,
 }
 
 #[derive(Component, Debug)]
@@ -36,22 +44,32 @@ pub struct Asteroid {
 impl AsteroidType {
     pub fn get_sprite_num(&self) -> usize {
         match self {
+            // Mineral
             AsteroidType::Big => 1,
             AsteroidType::Medium => 2,
             AsteroidType::Small => 3,
             AsteroidType::Bitty => 4,
-            // Special
+            // Explosive
             AsteroidType::Bomb => 10,
+            // Reactive
+            AsteroidType::Hydrogen => 27,
+            AsteroidType::Oxygen => 28,
+            AsteroidType::Water => 29,
         }
     }
     pub fn get_radius(&self) -> f32 {
         match self {
+            // Mineral
             AsteroidType::Big => 8.0,
             AsteroidType::Medium => 6.0,
             AsteroidType::Small => 4.0,
             AsteroidType::Bitty => 2.0,
-            // Special
+            // Explosive
             AsteroidType::Bomb => 4.0,
+            // Reactive
+            AsteroidType::Hydrogen => 4.0,
+            AsteroidType::Oxygen => 4.0,
+            AsteroidType::Water => 4.0,
         }
     }
     pub fn get_mass(&self) -> f32 {
@@ -60,8 +78,12 @@ impl AsteroidType {
             AsteroidType::Medium => 10.0,
             AsteroidType::Small => 5.0,
             AsteroidType::Bitty => 4.0,
-            // Special
+            // Bomb
             AsteroidType::Bomb => 20.0,
+            // Reactive
+            AsteroidType::Hydrogen => 4.0,
+            AsteroidType::Oxygen => 4.0,
+            AsteroidType::Water => 8.0,
         }
     }
     pub fn explodes(&self, other: Self) -> Option<f32> {
@@ -69,6 +91,26 @@ impl AsteroidType {
             (AsteroidType::Bomb, AsteroidType::Bomb) => Some(50000.0),
             _ => None,
         }
+    }
+    pub fn reacts(&self, other: Self) -> Option<(Self, Option<Self>)> {
+        match (self, other) {
+            (AsteroidType::Hydrogen, AsteroidType::Oxygen)
+            | (AsteroidType::Oxygen, AsteroidType::Hydrogen) => Some((AsteroidType::Water, None)),
+            _ => None,
+        }
+    }
+
+    pub fn base_prices() -> HashMap<AsteroidType, f32> {
+        let mut prices = HashMap::new();
+        prices.insert(AsteroidType::Bitty, 1.0);
+        prices.insert(AsteroidType::Small, 1.0);
+        prices.insert(AsteroidType::Medium, 1.5);
+        prices.insert(AsteroidType::Big, 2.0);
+        prices.insert(AsteroidType::Bomb, 5.0);
+        prices.insert(AsteroidType::Hydrogen, 1.5);
+        prices.insert(AsteroidType::Oxygen, 1.5);
+        prices.insert(AsteroidType::Water, 1.0);
+        prices
     }
 }
 
@@ -121,6 +163,7 @@ pub fn generate_asteroid_field(
     size: (f32, f32),
     asteroid_count: usize,
     bomb_count: usize,
+    gas_count: usize,
     transform: Transform,
 ) {
     let spritesheet = {
@@ -142,18 +185,34 @@ pub fn generate_asteroid_field(
             }
         };
         let mut transform = transform.clone();
-        transform.set_translation_xyz(x, y, 0.0);
+        transform.append_translation_xyz(x, y, 0.0);
         generate_asteroid(world.create_entity(), spritesheet.clone(), size, transform);
     }
     for _ in 0..bomb_count {
         let x = rand::random::<f32>() * size.0;
         let y = rand::random::<f32>() * size.1;
         let mut transform = transform.clone();
-        transform.set_translation_xyz(x, y, 0.0);
+        transform.append_translation_xyz(x, y, 0.0);
         generate_asteroid(
             world.create_entity(),
             spritesheet.clone(),
             AsteroidType::Bomb,
+            transform,
+        );
+    }
+    for _ in 0..gas_count {
+        let x = rand::random::<f32>() * size.0;
+        let y = rand::random::<f32>() * size.1;
+        let mut transform = transform.clone();
+        transform.append_translation_xyz(x, y, 0.0);
+        generate_asteroid(
+            world.create_entity(),
+            spritesheet.clone(),
+            if rand::random() {
+                AsteroidType::Hydrogen
+            } else {
+                AsteroidType::Oxygen
+            },
             transform,
         );
     }
@@ -239,6 +298,75 @@ impl<'s> System<'s> for AsteroidExplosionSystem {
     }
 }
 
+#[derive(Default)]
+pub struct AsteroidReactionSystem {
+    reader: Option<ReaderId<ContactEvent<DefaultColliderHandle>>>,
+}
+
+impl<'s> System<'s> for AsteroidReactionSystem {
+    type SystemData = (
+        Read<'s, EventChannel<PhysicsContactEvent>>,
+        ReadStorage<'s, PhysicsHandle>,
+        WriteStorage<'s, Asteroid>,
+        Entities<'s>,
+        Write<'s, Physics>,
+        Read<'s, LazyUpdate>,
+        SpriteRes<'s>,
+    );
+
+    fn setup(&mut self, world: &mut World) {
+        self.reader = Some(
+            world
+                .write_resource::<EventChannel<PhysicsContactEvent>>()
+                .register_reader(),
+        );
+    }
+
+    fn run(
+        &mut self,
+        (events, handles, mut asteroids, entities, physics, update, sprites): Self::SystemData,
+    ) {
+        if let Some(reader) = &mut self.reader {
+            for event in events.read(reader) {
+                match event {
+                    ContactEvent::Started(a, b) => {
+                        if let (Some(a), Some(b)) = (
+                            physics.get_collider_entity(*a),
+                            physics.get_collider_entity(*b),
+                        ) {
+                            let reaction = {
+                                if let (Some(asteroid_a), Some(asteroid_b)) =
+                                    (asteroids.get(*a), asteroids.get(*b))
+                                {
+                                    asteroid_a.my_type.reacts(asteroid_b.my_type)
+                                } else {
+                                    None
+                                }
+                            };
+                            if let Some((reaction_a, reaction_b)) = reaction {
+                                asteroids
+                                    .get_mut(*a)
+                                    .map(|asteroid| asteroid.my_type = reaction_a);
+                                update.exec(resize_asteroid(*a));
+
+                                if let Some(reaction_b) = reaction_b {
+                                    asteroids
+                                        .get_mut(*b)
+                                        .map(|asteroid| asteroid.my_type = reaction_b);
+                                    update.exec(resize_asteroid(*b));
+                                } else {
+                                    entities.delete(*b);
+                                }
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
 pub struct AsteroidBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for AsteroidBundle {
@@ -248,6 +376,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for AsteroidBundle {
         dispatcher: &mut DispatcherBuilder<'a, 'b>,
     ) -> Result<(), Error> {
         dispatcher.add(AsteroidExplosionSystem::default(), "asteroid_explode", &[]);
+        dispatcher.add(AsteroidReactionSystem::default(), "asteroid_react", &[]);
         dispatcher.add(ExplosionForceSystem, "explosion_force", &[]);
         Ok(())
     }

@@ -20,6 +20,7 @@ pub struct Particle {
     pub my_type: ParticleType,
     pub lifetime: f32,
     pub velocity: (f32, f32),
+    pub delta_velocity: (f32, f32),
     pub rotation: f32,
 }
 
@@ -29,6 +30,7 @@ impl Particle {
             my_type: ParticleType::TractorHeavy,
             lifetime: 1.0,
             velocity: (25.0, 0.0),
+            delta_velocity: (25.0, 0.0),
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
@@ -37,6 +39,7 @@ impl Particle {
             my_type: ParticleType::TractorLight,
             lifetime: 0.2,
             velocity: (50.0, 0.0),
+            delta_velocity: (0.0, 5.0 - rand::random::<f32>() * 10.0),
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
@@ -45,6 +48,7 @@ impl Particle {
             my_type: ParticleType::TractorPull,
             lifetime: 0.1,
             velocity: (75.0, 0.0),
+            delta_velocity: (15.0, 15.0 - rand::random::<f32>() * 30.0),
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
@@ -89,6 +93,8 @@ impl<'s> System<'s> for ParticleSystem {
         for (particle, transform, entity) in (&mut particles, &mut transforms, &entities).join() {
             if particle.lifetime > dt {
                 particle.lifetime -= dt;
+                particle.velocity.0 += particle.delta_velocity.0 * dt;
+                particle.velocity.1 += particle.delta_velocity.1 * dt;
                 transform.append_translation_xyz(
                     particle.velocity.0 * dt,
                     particle.velocity.1 * dt,

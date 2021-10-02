@@ -28,6 +28,7 @@ pub enum AsteroidDesc {
         location: Option<(f32, f32, f32, f32)>,
         normal: Option<usize>,
         bombs: Option<usize>,
+        gases: Option<usize>,
     },
 }
 
@@ -131,7 +132,6 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
         let mut transform = Transform::default();
         transform.set_translation_x(*x);
         transform.set_translation_y(*y);
-        println!("{:?}", transform);
         generate_delivery_zone(world, (75.0, 75.0), transform);
     }
     for asteroid_desc in level.asteroids {
@@ -140,6 +140,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                 location,
                 normal,
                 bombs,
+                gases,
             } => {
                 let mut transform = Transform::default();
                 let location =
@@ -151,6 +152,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                     (location.2, location.3),
                     normal.unwrap_or_default(),
                     bombs.unwrap_or_default(),
+                    gases.unwrap_or_default(),
                     transform,
                 );
             }

@@ -85,11 +85,9 @@ impl<'s> System<'s> for PlayerTractorSystem {
                         transform,
                     ))
                 } else {
-                    println!("No mouse position...");
                     None
                 }
             } else {
-                println!("No camera...");
                 None
             }
         };
@@ -113,7 +111,6 @@ impl<'s> System<'s> for PlayerTractorSystem {
             }
         } else if input.mouse_button_is_down(MouseButton::Left) {
             if let Some(location) = location {
-                println!("Init!");
                 init_tractor(
                     update.create_entity(&entities),
                     sprites.unwrap().sprites.clone(),
@@ -151,8 +148,8 @@ impl<'s> System<'s> for TractorGravitySystem {
                     sprites.get_handle(),
                     Particle::tractor_pull(direction),
                     nalgebra::Point2::new(
-                        translation.x - direction.x * 15.0,
-                        translation.y - direction.y * 15.0,
+                        translation.x - direction.x * 30.0,
+                        translation.y - direction.y * 30.0,
                     ),
                 );
             }

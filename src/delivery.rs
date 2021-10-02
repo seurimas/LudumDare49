@@ -12,6 +12,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 use crate::{
     assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
+    economy::Enterprise,
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     player::Player,
 };
@@ -68,7 +69,6 @@ pub fn generate_delivery_corner(
     let (dx, dy) = position.get_offset(size);
     transform.move_right(dx);
     transform.move_down(dy);
-    println!("{:?}", transform);
     builder
         .with(SpriteRender::new(sprites, position.get_sprite_num()))
         .with(PhysicsDesc::new(body, collider))
@@ -134,6 +134,7 @@ impl<'s> System<'s> for PlayerDeliverySystem {
     type SystemData = (
         Read<'s, InputHandler<StringBindings>>,
         WriteStorage<'s, DeliveryZone>,
+        Write<'s, Enterprise>,
         ReadStorage<'s, PhysicsHandle>,
         ReadStorage<'s, Asteroid>,
         Entities<'s>,
@@ -142,7 +143,7 @@ impl<'s> System<'s> for PlayerDeliverySystem {
 
     fn run(
         &mut self,
-        (input, mut deliveries, handles, asteroids, entities, physics): Self::SystemData,
+        (input, mut deliveries, mut enterprise, handles, asteroids, entities, physics): Self::SystemData,
     ) {
         if input.action_is_down("deliver").unwrap_or(false) {
             for (delivery, delivery_handle) in (&mut deliveries, &handles).join() {
@@ -151,9 +152,45 @@ impl<'s> System<'s> for PlayerDeliverySystem {
                 }
                 for (asteroid, handle, entity) in (&asteroids, &handles, &entities).join() {
                     if physics.is_intersecting(delivery_handle, handle) {
+                        enterprise
+                            .deliver(asteroid.my_type, physics.get_mass(handle).unwrap_or(10.0));
                         entities.delete(entity);
+                        delivery.cooldown = Some(5.0);
                     }
-                    delivery.cooldown = Some(5.0);
+                }
+            }
+        }
+    }
+}
+
+pub struct PlayerJumpSystem;
+impl<'s> System<'s> for PlayerJumpSystem {
+    type SystemData = (
+        Read<'s, InputHandler<StringBindings>>,
+        WriteStorage<'s, DeliveryZone>,
+        Write<'s, Enterprise>,
+        ReadStorage<'s, PhysicsHandle>,
+        ReadStorage<'s, Player>,
+        Entities<'s>,
+        Write<'s, Physics>,
+    );
+
+    fn run(
+        &mut self,
+        (input, mut deliveries, mut enterprise, handles, players, entities, physics): Self::SystemData,
+    ) {
+        if input.action_is_down("deliver").unwrap_or(false) {
+            for (delivery, delivery_handle) in (&mut deliveries, &handles).join() {
+                if delivery.cooldown.is_some() {
+                    continue;
+                }
+                for (player, handle, entity) in (&players, &handles, &entities).join() {
+                    // if physics.is_intersecting(delivery_handle, handle) {
+                    //     entities.delete(entity);
+                    // }
+                    if enterprise.try_jump() {
+                        delivery.cooldown = Some(5.0);
+                    }
                 }
             }
         }
@@ -189,11 +226,13 @@ impl<'s> System<'s> for PlayerDeliveryArrowSystem {
 }
 
 pub const ARROW: usize = 11;
+pub const JUMP_ARROW: usize = 32;
 
 fn arrow_transform(player_transform: Transform, direction: Vector3<f32>) -> Transform {
     let mut transform = player_transform;
     transform.set_rotation_2d(0.0);
-    transform.append_translation(direction * 16.0);
+    transform.append_translation(direction * 24.0);
+    transform.set_scale(Vector3::new(1.5, 1.5, 1.5));
     if direction.magnitude_squared() > 0.0 {
         transform.set_rotation_2d(f32::atan2(direction.y, direction.x));
     }
@@ -221,6 +260,13 @@ fn render_arrow(
                     if let Some(direction) = direction {
                         transforms
                             .insert(arrow_entity, arrow_transform(player_transform, direction));
+                        sprite_renders.insert(
+                            arrow_entity,
+                            SpriteRender {
+                                sprite_sheet: sprites.get_handle(),
+                                sprite_number: JUMP_ARROW,
+                            },
+                        );
                     } else {
                         entities.delete(arrow_entity);
                     }
@@ -235,7 +281,7 @@ fn render_arrow(
                         .with(
                             SpriteRender {
                                 sprite_sheet: sprites.get_handle(),
-                                sprite_number: ARROW,
+                                sprite_number: JUMP_ARROW,
                             },
                             &mut sprite_renders,
                         )

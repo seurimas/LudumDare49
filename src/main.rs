@@ -23,6 +23,7 @@ use assets::{
     load_level, load_sound_file, load_spritesheet, LevelStorage, SoundStorage, SpriteStorage,
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
+use economy::{EconomyBundle, Enterprise};
 use level::{generate_boundaries, initialize_level, Level, LevelBundle, LevelHandle};
 use particles::ParticleBundle;
 use physics::{PhysicsBundle, PhysicsHandle};
@@ -33,6 +34,7 @@ use crate::delivery::generate_delivery_zone;
 mod assets;
 mod asteroid;
 mod delivery;
+mod economy;
 mod explosions;
 mod level;
 mod particles;
@@ -51,10 +53,11 @@ impl SimpleState for GameplayState {
         data.world.delete_all();
         data.world.insert(self.assets.0.clone());
         data.world.insert(self.assets.1.clone());
+        data.world.insert(Enterprise::begin_enterprise());
         initialize_level(data.world, &self.level);
-        // data.world.exec(|mut creator: UiCreator<'_>| {
-        //     creator.create(get_resource("hud.ron"), ());
-        // });
+        data.world.exec(|mut creator: UiCreator<'_>| {
+            creator.create("hud.ron", ());
+        });
     }
 
     fn handle_event(
@@ -67,7 +70,6 @@ impl SimpleState for GameplayState {
                 Event::WindowEvent { ref event, .. } => match *event {
                     WindowEvent::CloseRequested => Trans::Quit,
                     WindowEvent::Resized(LogicalSize { width, height }) => {
-                        println!("Resized!");
                         data.world.exec(|mut camera: WriteStorage<Camera>| {
                             if let Some(camera) = (&mut camera).join().next() {
                                 *camera = Camera::standard_2d(width as f32, height as f32);
@@ -224,7 +226,6 @@ fn main() -> amethyst::Result<()> {
 
     let display_config_path = app_root.join("assets/display.ron");
     let input_path = app_root.join("assets/input.ron");
-    let levels_path = app_root.join("levels.ron");
 
     let assets_dir = app_root.join("assets/");
 
@@ -247,6 +248,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PhysicsBundle)?
         .with_bundle(AsteroidBundle)?
+        .with_bundle(EconomyBundle)?
         .with_bundle(ParticleBundle)?
         .with_bundle(LevelBundle)?
         .with_bundle(PlayerBundle)?

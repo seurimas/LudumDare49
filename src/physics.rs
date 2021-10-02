@@ -1,6 +1,7 @@
 use amethyst::core::bundle::SystemBundle;
 use amethyst::ecs::*;
 use amethyst::error::Error;
+use amethyst::shrev::EventChannel;
 use amethyst::{
     assets::AssetStorage,
     audio::{output::Output, Source, SourceHandle},
@@ -11,6 +12,7 @@ use nalgebra::{RealField, Vector2};
 use ncollide2d::pipeline::narrow_phase::ContactEvent;
 use ncollide2d::pipeline::object::CollisionGroups;
 use ncollide2d::query::{Proximity, Ray};
+use ncollide2d::shape::{Shape, ShapeHandle};
 use nphysics2d::force_generator::DefaultForceGeneratorSet;
 use nphysics2d::joint::DefaultJointConstraintSet;
 use nphysics2d::math::{Force, ForceType};
@@ -18,6 +20,8 @@ use nphysics2d::object::*;
 use nphysics2d::world::{
     DefaultGeometricalWorld, DefaultMechanicalWorld, GeometricalWorld, MechanicalWorld,
 };
+
+pub type PhysicsContactEvent = ContactEvent<DefaultColliderHandle>;
 
 type N = f32;
 
@@ -165,6 +169,14 @@ impl Physics {
                     Vector2::new(x, y),
                     rigid_body.position().rotation.angle(),
                 ));
+            }
+        }
+    }
+
+    pub fn change_shape(&mut self, handle: &PhysicsHandle, shape: ShapeHandle<N>) {
+        if let Some(handle) = handle.collider {
+            if let Some(collider) = self.colliders.get_mut(handle) {
+                collider.set_shape(shape);
             }
         }
     }
@@ -388,9 +400,10 @@ impl<'s> System<'s> for PhysicsSystem {
         Write<'s, Physics>,
         ReadStorage<'s, PhysicsHandle>,
         WriteStorage<'s, Transform>,
+        Write<'s, EventChannel<PhysicsContactEvent>>,
     );
 
-    fn run(&mut self, (mut physics, handles, mut transforms): Self::SystemData) {
+    fn run(&mut self, (mut physics, handles, mut transforms, mut events): Self::SystemData) {
         physics.step();
         for (handle, transform) in (&handles, &mut transforms).join() {
             if let Some(position) = physics.get_position(handle) {
@@ -402,6 +415,7 @@ impl<'s> System<'s> for PhysicsSystem {
                 transform.set_rotation_2d(rotation_2d as f32);
             }
         }
+        events.iter_write(physics.geo_world.contact_events().iter().cloned());
     }
 }
 

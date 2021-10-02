@@ -10,11 +10,11 @@ use amethyst::{
     },
     tiles::RenderTiles2D,
     ui::{RenderUi, UiBundle, UiCreator, UiEventType, UiFinder},
-    utils::application_root_dir,
+    utils::{application_root_dir, fps_counter::FpsCounterBundle},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
 use assets::{load_sound_file, load_spritesheet, SoundStorage, SpriteStorage};
-use asteroid::{generate_asteroid, AsteroidSize};
+use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
 use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
 
@@ -55,119 +55,9 @@ impl SimpleState for GameplayState {
         transform.set_translation_x(0.0);
         transform.set_translation_y(0.0);
         generate_delivery_zone(data.world, (100.0, 100.0), transform.clone());
-        transform.set_translation_x(200.0);
-        transform.set_translation_y(200.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Big,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Medium,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Small,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Bitty,
-            transform.clone(),
-        );
-        transform.move_up(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Big,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Medium,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Small,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Bitty,
-            transform.clone(),
-        );
-        transform.move_up(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Big,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Medium,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Small,
-            transform.clone(),
-        );
-        transform.move_left(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Bitty,
-            transform.clone(),
-        );
-        transform.move_up(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Big,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Medium,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Small,
-            transform.clone(),
-        );
-        transform.move_right(10.0);
-        generate_asteroid(
-            data.world.create_entity(),
-            spritesheet.clone(),
-            AsteroidSize::Bitty,
-            transform.clone(),
-        );
+        transform.set_translation_x(400.0);
+        transform.set_translation_y(400.0);
+        generate_asteroid_field(data.world, (800.0, 800.0), 100, 20, transform);
         // initialize_tile_world(data.world);
         // data.world.exec(|mut creator: UiCreator<'_>| {
         //     creator.create(get_resource("hud.ron"), ());
@@ -298,7 +188,9 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderUi::default()),
         )?
         .with_bundle(PhysicsBundle)?
+        .with_bundle(AsteroidBundle)?
         .with_bundle(PlayerBundle)?
+        .with_bundle(FpsCounterBundle)?
         .with_bundle(UiBundle::<amethyst::input::StringBindings>::new())?;
 
     let mut game = Application::new(assets_dir, LoadingState::default(), game_data)?;

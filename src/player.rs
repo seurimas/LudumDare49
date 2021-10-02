@@ -5,6 +5,7 @@ use amethyst::{
     prelude::*,
     renderer::{Camera, Sprite, SpriteRender},
     shred::World,
+    utils::fps_counter::FpsCounter,
     Error,
 };
 use nalgebra::Vector2;
@@ -78,9 +79,10 @@ impl<'s> System<'s> for PlayerMovementSystem {
         ReadStorage<'s, PhysicsHandle>,
         WriteStorage<'s, Player>,
         Entities<'s>,
+        Read<'s, FpsCounter>,
     );
 
-    fn run(&mut self, (input, mut physics, handles, mut player, entities): Self::SystemData) {
+    fn run(&mut self, (input, mut physics, handles, mut player, entities, fps): Self::SystemData) {
         let x_tilt = input.axis_value("leftright");
         let y_tilt = input.axis_value("updown");
         if let (Some(x_tilt), Some(y_tilt)) = (x_tilt, y_tilt) {
@@ -97,10 +99,9 @@ impl<'s> System<'s> for PlayerMovementSystem {
                         .transform_vector(&Vector2::new(0.0, y_tilt * 500.0)),
                 );
                 physics.set_angular_velocity(handle, -x_tilt);
-            } else {
-                println!("No player...");
             }
         }
+        println!("{}", fps.sampled_fps());
     }
 }
 

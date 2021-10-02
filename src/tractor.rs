@@ -148,7 +148,8 @@ impl<'s> System<'s> for TractorGravitySystem {
                     );
                     let distance = difference.magnitude();
                     let mut strength = tractor.strength;
-                    if distance > 250.0 {
+                    if distance > 100.0 {
+                        strength = 0.0;
                         tints.remove(entity);
                     } else if distance > 50.0 {
                         tints.insert(entity, Tint(Srgb::new(1.0, 0.0, 0.0).into()));

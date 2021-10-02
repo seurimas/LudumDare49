@@ -13,29 +13,29 @@ List((
     (
       x: 24,
       y: 0,
-      height: 9,
-      width: 9,
+      height: 17,
+      width: 17,
     ),
   /* 2: Medium Asteroid */
     (
-      x: 33,
-      y: 0,
-      height: 7,
-      width: 7,
+      x: 24,
+      y: 17,
+      height: 13,
+      width: 13,
     ),
   /* 3: Small Asteroid */
     (
-      x: 40,
-      y: 0,
-      height: 5,
-      width: 5,
+      x: 24,
+      y: 30,
+      height: 9,
+      width: 9,
     ),
   /* 4: Bitty Asteroid */
     (
-      x: 45,
-      y: 0,
-      height: 3,
-      width: 3,
+      x: 24,
+      y: 39,
+      height: 5,
+      width: 5,
     ),
   /* 5: Tractor */
     (
@@ -68,6 +68,13 @@ List((
       y: 12,
       height: 12,
       width: 12,
+    ),
+  /* 10: Bomb Asteroid */
+    (
+      x: 33,
+      y: 30,
+      height: 9,
+      width: 9,
     ),
   ],
 ))

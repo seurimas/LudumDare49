@@ -50,9 +50,21 @@ where
     )
 }
 
+pub type SpriteRes<'s> = Option<Read<'s, SpriteStorage>>;
+
 #[derive(Clone)]
 pub struct SpriteStorage {
     pub sprites: SpriteSheetHandle,
+}
+
+pub trait SpriteHandles {
+    fn get_handle(&self) -> SpriteSheetHandle;
+}
+
+impl<'s> SpriteHandles for Option<Read<'s, SpriteStorage>> {
+    fn get_handle(&self) -> SpriteSheetHandle {
+        self.as_ref().unwrap().sprites.clone()
+    }
 }
 
 #[derive(Clone)]

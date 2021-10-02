@@ -6,15 +6,18 @@ use amethyst::{
     input::is_close_requested,
     prelude::*,
     renderer::{
-        types::DefaultBackend, RenderDebugLines, RenderFlat2D, RenderToWindow, RenderingBundle,
+        types::DefaultBackend, Camera, RenderDebugLines, RenderFlat2D, RenderToWindow,
+        RenderingBundle,
     },
     tiles::RenderTiles2D,
     ui::{RenderUi, UiBundle, UiCreator, UiEventType, UiFinder},
     utils::{application_root_dir, fps_counter::FpsCounterBundle},
+    winit::{dpi::LogicalSize, Event, WindowEvent},
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
 use assets::{load_sound_file, load_spritesheet, SoundStorage, SpriteStorage};
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
+use level::{generate_boundaries, LevelBundle};
 use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
 
@@ -23,6 +26,7 @@ mod assets;
 mod asteroid;
 mod delivery;
 mod explosions;
+mod level;
 mod physics;
 mod player;
 mod tractor;
@@ -49,20 +53,43 @@ impl SimpleState for GameplayState {
         let mut transform = Transform::default();
         transform.set_translation_x(25.0);
         transform.set_translation_y(25.0);
-        let spritesheet = {
-            let sprites = data.world.read_resource::<SpriteStorage>();
-            sprites.sprites.clone()
-        };
         transform.set_translation_x(0.0);
         transform.set_translation_y(0.0);
         generate_delivery_zone(data.world, (75.0, 75.0), transform.clone());
-        transform.set_translation_x(400.0);
-        transform.set_translation_y(400.0);
+        transform.set_translation_x(0.0);
+        transform.set_translation_y(0.0);
         generate_asteroid_field(data.world, (1000.0, 1000.0), 300, 60, transform);
+        generate_boundaries(data.world, (1200.0, 1200.0));
         // initialize_tile_world(data.world);
         // data.world.exec(|mut creator: UiCreator<'_>| {
         //     creator.create(get_resource("hud.ron"), ());
         // });
+    }
+
+    fn handle_event(
+        &mut self,
+        data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        match &event {
+            StateEvent::Window(event) => match *event {
+                Event::WindowEvent { ref event, .. } => match *event {
+                    WindowEvent::CloseRequested => Trans::Quit,
+                    WindowEvent::Resized(LogicalSize { width, height }) => {
+                        println!("Resized!");
+                        data.world.exec(|mut camera: WriteStorage<Camera>| {
+                            if let Some(camera) = (&mut camera).join().next() {
+                                *camera = Camera::standard_2d(width as f32, height as f32);
+                            }
+                        });
+                        Trans::None
+                    }
+                    _ => Trans::None,
+                },
+                _ => Trans::None,
+            },
+            _ => Trans::None,
+        }
     }
 
     fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
@@ -190,6 +217,7 @@ fn main() -> amethyst::Result<()> {
         )?
         .with_bundle(PhysicsBundle)?
         .with_bundle(AsteroidBundle)?
+        .with_bundle(LevelBundle)?
         .with_bundle(PlayerBundle)?
         .with_bundle(FpsCounterBundle)?
         .with_bundle(UiBundle::<amethyst::input::StringBindings>::new())?;

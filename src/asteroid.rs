@@ -122,8 +122,8 @@ pub fn generate_asteroid_field(
         sprites.sprites.clone()
     };
     for _ in 0..asteroid_count {
-        let x = rand::random::<f32>() * size.0;
-        let y = rand::random::<f32>() * size.1;
+        let x = rand::random::<f32>() * size.0 - size.0 / 2.0;
+        let y = rand::random::<f32>() * size.1 - size.1 / 2.0;
         let size = {
             if rand::random::<f32>() > 0.9 {
                 AsteroidType::Big

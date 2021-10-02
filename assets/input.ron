@@ -19,5 +19,6 @@
   },
   actions: {
     "deliver": [[Key(Q)]],
+    "boost": [[Key(Space)]],
   }
 )

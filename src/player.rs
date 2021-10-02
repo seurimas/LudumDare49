@@ -85,6 +85,7 @@ impl<'s> System<'s> for PlayerMovementSystem {
     fn run(&mut self, (input, mut physics, handles, mut player, entities, fps): Self::SystemData) {
         let x_tilt = input.axis_value("leftright");
         let y_tilt = input.axis_value("updown");
+        let boost = input.action_is_down("boost").unwrap_or(false);
         if let (Some(x_tilt), Some(y_tilt)) = (x_tilt, y_tilt) {
             if let Some((entity, handle, player)) = (&entities, &handles, &mut player).join().next()
             {
@@ -92,11 +93,12 @@ impl<'s> System<'s> for PlayerMovementSystem {
                     return;
                 }
                 let position = physics.get_position(handle).unwrap();
+                let speed = if boost { 200_000.0 } else { 100_000.0 };
                 physics.apply_force(
                     handle,
                     position
                         .rotation
-                        .transform_vector(&Vector2::new(0.0, y_tilt * 100_000.0)),
+                        .transform_vector(&Vector2::new(0.0, y_tilt * speed)),
                 );
                 physics.set_angular_velocity(handle, -x_tilt);
             }

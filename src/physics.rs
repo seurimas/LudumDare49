@@ -9,6 +9,7 @@ use amethyst::{
 };
 use nalgebra::geometry::{Isometry2, Point2, Point3, UnitQuaternion};
 use nalgebra::{RealField, Vector2};
+use ncollide2d::narrow_phase::ProximityEvent;
 use ncollide2d::pipeline::narrow_phase::ContactEvent;
 use ncollide2d::pipeline::object::CollisionGroups;
 use ncollide2d::query::{Proximity, Ray};
@@ -22,6 +23,7 @@ use nphysics2d::world::{
 };
 
 pub type PhysicsContactEvent = ContactEvent<DefaultColliderHandle>;
+pub type PhysicsProximityEvent = ProximityEvent<DefaultColliderHandle>;
 
 type N = f32;
 
@@ -401,9 +403,13 @@ impl<'s> System<'s> for PhysicsSystem {
         ReadStorage<'s, PhysicsHandle>,
         WriteStorage<'s, Transform>,
         Write<'s, EventChannel<PhysicsContactEvent>>,
+        Write<'s, EventChannel<PhysicsProximityEvent>>,
     );
 
-    fn run(&mut self, (mut physics, handles, mut transforms, mut events): Self::SystemData) {
+    fn run(
+        &mut self,
+        (mut physics, handles, mut transforms, mut c_events, mut p_events): Self::SystemData,
+    ) {
         physics.step();
         for (handle, transform) in (&handles, &mut transforms).join() {
             if let Some(position) = physics.get_position(handle) {
@@ -415,7 +421,8 @@ impl<'s> System<'s> for PhysicsSystem {
                 transform.set_rotation_2d(rotation_2d as f32);
             }
         }
-        events.iter_write(physics.geo_world.contact_events().iter().cloned());
+        c_events.iter_write(physics.geo_world.contact_events().iter().cloned());
+        p_events.iter_write(physics.geo_world.proximity_events().iter().cloned());
     }
 }
 

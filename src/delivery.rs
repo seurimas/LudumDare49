@@ -1,5 +1,5 @@
 use amethyst::{
-    core::Transform,
+    core::{math::Vector3, Transform},
     ecs::*,
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, SpriteRender},
@@ -9,9 +9,10 @@ use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    assets::SpriteStorage,
+    assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
     physics::{Physics, PhysicsDesc, PhysicsHandle},
+    player::Player,
 };
 
 #[derive(Component, Debug, Clone, Copy)]
@@ -26,6 +27,10 @@ pub enum DeliveryCorner {
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct DeliveryZone;
+
+#[derive(Component, Debug)]
+#[storage(VecStorage)]
+pub struct DeliveryArrow(Entity);
 
 impl DeliveryCorner {
     fn get_offset(&self, size: (f32, f32)) -> (f32, f32) {
@@ -117,5 +122,77 @@ impl<'s> System<'s> for PlayerDeliverySystem {
                 }
             }
         }
+    }
+}
+
+pub struct PlayerDeliveryArrowSystem;
+impl<'s> System<'s> for PlayerDeliveryArrowSystem {
+    type SystemData = (
+        ReadStorage<'s, DeliveryZone>,
+        ReadStorage<'s, DeliveryArrow>,
+        ReadStorage<'s, Transform>,
+        ReadStorage<'s, Player>,
+        Read<'s, LazyUpdate>,
+        Entities<'s>,
+    );
+
+    fn run(
+        &mut self,
+        (deliveries, arrows, transforms, players, update, entities): Self::SystemData,
+    ) {
+        if let Some((_player, player_transform)) = (&players, &transforms).join().next() {
+            for (delivery, transform, entity) in (&deliveries, &transforms, &entities).join() {
+                let direction = transform.translation() - player_transform.translation();
+                update.exec(render_arrow(
+                    player_transform.clone(),
+                    direction.normalize(),
+                    entity,
+                ));
+            }
+        }
+    }
+}
+
+pub const ARROW: usize = 11;
+
+fn render_arrow(
+    player_transform: Transform,
+    direction: Vector3<f32>,
+    entity: Entity,
+) -> impl Send + Sync + FnOnce(&mut World) + 'static {
+    move |world| {
+        world.exec(
+            |(mut arrows, mut transforms, mut sprite_renders, entities, sprites): (
+                WriteStorage<DeliveryArrow>,
+                WriteStorage<Transform>,
+                WriteStorage<SpriteRender>,
+                Entities,
+                SpriteRes,
+            )| {
+                let mut transform = player_transform;
+                transform.set_rotation_2d(0.0);
+                transform.append_translation(direction * 16.0);
+                transform.set_rotation_2d(f32::atan2(direction.y, direction.x));
+                if let Some((_arrow, arrow_entity)) = (&arrows, &entities)
+                    .join()
+                    .find(|(arrow, _)| arrow.0 == entity)
+                {
+                    transforms.insert(arrow_entity, transform);
+                } else {
+                    entities
+                        .build_entity()
+                        .with(DeliveryArrow(entity), &mut arrows)
+                        .with(transform, &mut transforms)
+                        .with(
+                            SpriteRender {
+                                sprite_sheet: sprites.get_handle(),
+                                sprite_number: ARROW,
+                            },
+                            &mut sprite_renders,
+                        )
+                        .build();
+                }
+            },
+        );
     }
 }

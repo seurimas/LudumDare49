@@ -76,5 +76,12 @@ List((
       height: 9,
       width: 9,
     ),
+  /* 11: Arrow */
+    (
+      x: 96,
+      y: 0,
+      height: 11,
+      width: 11,
+    ),
   ],
 ))

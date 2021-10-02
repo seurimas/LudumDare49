@@ -14,7 +14,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
     assets::SpriteStorage,
-    delivery::PlayerDeliverySystem,
+    delivery::{PlayerDeliveryArrowSystem, PlayerDeliverySystem},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     tractor::{PlayerTractorSystem, TractorGravitySystem},
 };
@@ -54,7 +54,7 @@ pub fn initialize_player(world: &mut World, transform: Transform) {
         sprites.sprites.clone()
     };
     let body = RigidBodyDesc::new()
-        .mass(5.0)
+        .mass(500.0)
         .linear_damping(1.0)
         .status(BodyStatus::Dynamic);
     let shape = ShapeHandle::new(Ball::new(8.0));
@@ -96,12 +96,12 @@ impl<'s> System<'s> for PlayerMovementSystem {
                     handle,
                     position
                         .rotation
-                        .transform_vector(&Vector2::new(0.0, y_tilt * 500.0)),
+                        .transform_vector(&Vector2::new(0.0, y_tilt * 100_000.0)),
                 );
                 physics.set_angular_velocity(handle, -x_tilt);
             }
         }
-        println!("{}", fps.sampled_fps());
+        // println!("{}", fps.sampled_fps());
     }
 }
 
@@ -116,6 +116,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for PlayerBundle {
         dispatcher.add(PlayerMovementSystem, "player_movement", &[]);
         dispatcher.add(PlayerTractorSystem, "player_tractor", &[]);
         dispatcher.add(PlayerDeliverySystem, "player_delivery", &[]);
+        dispatcher.add(PlayerDeliveryArrowSystem, "player_delivery_arrow", &[]);
         dispatcher.add(TractorGravitySystem, "tractor_gravity", &[]);
         Ok(())
     }

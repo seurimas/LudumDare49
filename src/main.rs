@@ -22,6 +22,7 @@ use crate::delivery::generate_delivery_zone;
 mod assets;
 mod asteroid;
 mod delivery;
+mod explosions;
 mod physics;
 mod player;
 mod tractor;
@@ -54,10 +55,10 @@ impl SimpleState for GameplayState {
         };
         transform.set_translation_x(0.0);
         transform.set_translation_y(0.0);
-        generate_delivery_zone(data.world, (100.0, 100.0), transform.clone());
+        generate_delivery_zone(data.world, (75.0, 75.0), transform.clone());
         transform.set_translation_x(400.0);
         transform.set_translation_y(400.0);
-        generate_asteroid_field(data.world, (800.0, 800.0), 100, 20, transform);
+        generate_asteroid_field(data.world, (1000.0, 1000.0), 300, 60, transform);
         // initialize_tile_world(data.world);
         // data.world.exec(|mut creator: UiCreator<'_>| {
         //     creator.create(get_resource("hud.ron"), ());

@@ -5,18 +5,25 @@ use amethyst::{
     renderer::{sprite::SpriteSheetHandle, SpriteRender},
     shred::System,
 };
+use nalgebra::Point2;
 
 use crate::{
     assets::{SpriteHandles, SpriteRes},
     asteroid::{resize_asteroid, Asteroid, AsteroidType},
+    particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsHandle},
 };
 
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub enum Explosion {
-    Combusting { strength: f32 },
-    Expanding { time: f32 },
+    Combusting {
+        strength: f32,
+        particles: Vec<usize>,
+    },
+    Expanding {
+        time: f32,
+    },
 }
 
 impl Explosion {
@@ -32,12 +39,15 @@ pub fn generate_explosion(
     builder: impl Builder,
     sprites: SpriteSheetHandle,
     transform: Transform,
-    strength: f32,
+    (strength, particles): (f32, Vec<usize>),
 ) {
     let asteroid = builder
         .with(SpriteRender::new(sprites, 5))
         .with(transform)
-        .with(Explosion::Combusting { strength })
+        .with(Explosion::Combusting {
+            strength,
+            particles,
+        })
         .build();
 }
 
@@ -68,9 +78,24 @@ impl<'s> System<'s> for ExplosionForceSystem {
         ): Self::SystemData,
     ) {
         for (explosion, transform) in (&mut explosions, &transforms).join() {
-            if let Explosion::Combusting { strength } = explosion {
+            if let Explosion::Combusting {
+                strength,
+                particles,
+            } = explosion
+            {
+                let location = transform.translation();
+                let particle_count = ((rand::random::<f32>() * 20.0) as usize + 10);
+                println!("{}", particle_count);
+                for _ in 0..particle_count {
+                    let direction = random_direction();
+                    emit_particle(
+                        update.create_entity(&entities),
+                        sprites.get_handle(),
+                        Particle::explosion(&particles, direction),
+                        Point2::new(location.x, location.y),
+                    );
+                }
                 for (handle, asteroid, entity) in (&handles, &mut asteroids, &entities).join() {
-                    let location = transform.translation();
                     if let Some(asteroid_location) = physics.get_location(handle) {
                         let difference = nalgebra::Vector2::new(
                             asteroid_location.x - location.x,
@@ -101,7 +126,7 @@ impl<'s> System<'s> for ExplosionForceSystem {
                                         update.create_entity(&entities),
                                         sprites.get_handle(),
                                         transform.clone(),
-                                        *strength,
+                                        (*strength, particles.clone()),
                                     );
                                 }
                                 _ => {}

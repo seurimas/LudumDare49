@@ -43,8 +43,8 @@ fn initialize_camera(
 
     builder
         .with(Camera::standard_2d(
-            screen_dimensions.0,
-            screen_dimensions.1,
+            screen_dimensions.0 / 2.0,
+            screen_dimensions.1 / 2.0,
         ))
         .with(Parent { entity: *player })
         .with(transform)

@@ -231,6 +231,7 @@ impl<'s> System<'s> for PlayerJumpSystem {
     type SystemData = (
         Read<'s, InputHandler<StringBindings>>,
         WriteStorage<'s, DeliveryZone>,
+        Read<'s, Level>,
         Write<'s, Enterprise>,
         ReadStorage<'s, PhysicsHandle>,
         ReadStorage<'s, Player>,
@@ -240,7 +241,7 @@ impl<'s> System<'s> for PlayerJumpSystem {
 
     fn run(
         &mut self,
-        (input, mut deliveries, mut enterprise, handles, players, entities, mut physics): Self::SystemData,
+        (input, mut deliveries, level, mut enterprise, handles, players, entities, mut physics): Self::SystemData,
     ) {
         if input.action_is_down("deliver").unwrap_or(false) {
             for (delivery, delivery_handle) in (&mut deliveries, &handles).join() {
@@ -248,7 +249,7 @@ impl<'s> System<'s> for PlayerJumpSystem {
                     continue;
                 }
                 for (player, handle, entity) in (&players, &handles, &entities).join() {
-                    if enterprise.try_jump() {
+                    if enterprise.try_jump(&level) {
                         delivery.cooldown = Some(8.0);
                         delivery.jumping = true;
                         physics.set_static(handle);

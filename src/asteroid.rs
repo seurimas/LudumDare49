@@ -33,6 +33,8 @@ pub enum AsteroidType {
     Hydrogen,
     Oxygen,
     Water,
+    WaterMedium,
+    WaterBig,
 }
 
 #[derive(Component, Debug)]
@@ -55,6 +57,8 @@ impl AsteroidType {
             AsteroidType::Hydrogen => 27,
             AsteroidType::Oxygen => 28,
             AsteroidType::Water => 29,
+            AsteroidType::WaterMedium => 37,
+            AsteroidType::WaterBig => 38,
         }
     }
     pub fn get_radius(&self) -> f32 {
@@ -70,6 +74,8 @@ impl AsteroidType {
             AsteroidType::Hydrogen => 4.0,
             AsteroidType::Oxygen => 4.0,
             AsteroidType::Water => 4.0,
+            AsteroidType::WaterMedium => 6.0,
+            AsteroidType::WaterBig => 8.0,
         }
     }
     pub fn get_mass(&self) -> f32 {
@@ -84,6 +90,8 @@ impl AsteroidType {
             AsteroidType::Hydrogen => 4.0,
             AsteroidType::Oxygen => 4.0,
             AsteroidType::Water => 8.0,
+            AsteroidType::WaterMedium => 16.0,
+            AsteroidType::WaterBig => 32.0,
         }
     }
     pub fn get_base_ppm(&self) -> f32 {
@@ -96,9 +104,11 @@ impl AsteroidType {
             _ => 1.0,
         }
     }
-    pub fn explodes(&self, other: Self) -> Option<f32> {
+    pub fn explodes(&self, other: Self) -> Option<(f32, Vec<usize>)> {
         match (self, other) {
-            (AsteroidType::Bomb, AsteroidType::Bomb) => Some(500_000.0),
+            (AsteroidType::Bomb, AsteroidType::Bomb) => Some((500_000.0, vec![36])),
+            (AsteroidType::Hydrogen, AsteroidType::Bomb) => Some((500_000.0, vec![34])),
+            (AsteroidType::Bomb, AsteroidType::Hydrogen) => Some((500_000.0, vec![34])),
             _ => None,
         }
     }
@@ -106,6 +116,10 @@ impl AsteroidType {
         match (self, other) {
             (AsteroidType::Hydrogen, AsteroidType::Oxygen)
             | (AsteroidType::Oxygen, AsteroidType::Hydrogen) => Some((AsteroidType::Water, None)),
+            (AsteroidType::Water, AsteroidType::Water) => Some((AsteroidType::WaterMedium, None)),
+            (AsteroidType::WaterMedium, AsteroidType::WaterMedium) => {
+                Some((AsteroidType::WaterBig, None))
+            }
             _ => None,
         }
     }
@@ -254,7 +268,7 @@ impl<'s> System<'s> for AsteroidExplosionSystem {
                             if let (Some(asteroid_a), Some(asteroid_b)) =
                                 (asteroids.get(*a), asteroids.get(*b))
                             {
-                                if let Some(strength) =
+                                if let Some((strength, particles)) =
                                     asteroid_a.my_type.explodes(asteroid_b.my_type)
                                 {
                                     if let Some((Some(location_a), Some(location_b))) = handles
@@ -279,7 +293,7 @@ impl<'s> System<'s> for AsteroidExplosionSystem {
                                             update.create_entity(&entities),
                                             sprites.get_handle(),
                                             transform,
-                                            strength,
+                                            (strength, particles),
                                         );
                                     }
                                     entities.delete(*a);

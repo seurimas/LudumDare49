@@ -1,4 +1,4 @@
 (
   title: "A.S.K. Mining",
-  dimensions: Some((480, 320)),
+  dimensions: Some((960, 640)),
 )

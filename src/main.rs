@@ -1,4 +1,4 @@
-#[allow(warnings)]
+#[allow(warning)]
 #[macro_use]
 extern crate serde;
 use std::{
@@ -27,6 +27,7 @@ use assets::{
     load_level, load_sound_file, load_spritesheet, LevelStorage, SoundStorage, SpriteStorage,
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
+use billboards::BillboardBundle;
 use delivery::DeliveryZone;
 use economy::{EconomyBundle, Enterprise};
 use level::{generate_boundaries, initialize_level, Level, LevelBundle, LevelHandle};
@@ -38,6 +39,7 @@ use serde::Deserialize;
 use crate::delivery::generate_delivery_zone;
 mod assets;
 mod asteroid;
+mod billboards;
 mod delivery;
 mod economy;
 mod explosions;
@@ -78,7 +80,8 @@ impl SimpleState for GameplayState {
                     WindowEvent::Resized(LogicalSize { width, height }) => {
                         data.world.exec(|mut camera: WriteStorage<Camera>| {
                             if let Some(camera) = (&mut camera).join().next() {
-                                *camera = Camera::standard_2d(width as f32, height as f32);
+                                *camera =
+                                    Camera::standard_2d(width as f32 / 2.0, height as f32 / 2.0);
                             }
                         });
                         Trans::None
@@ -270,6 +273,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(PhysicsBundle)?
         .with_bundle(AsteroidBundle)?
         .with_bundle(EconomyBundle)?
+        .with_bundle(BillboardBundle)?
         .with_bundle(ParticleBundle)?
         .with_bundle(LevelBundle)?
         .with_bundle(PlayerBundle)?

@@ -3,14 +3,20 @@ Level(
     boundaries: (2000.0, 2000.0),
     player_state: (0.0, 0.0),
     deliveries: [(0.0, 0.0)],
+    jump_cost: 1000,
     asteroids: [Field(
         normal: 200,
         bombs: 30,
+        gases: 100,
     ), Field(
         location: (200.0, 200.0, 200.0, 200.0),
         bombs: 10,
     ), Field(
-        location: (-200.0, -200.0, 200.0, 200.0),
-        gases: 10,
+        location: (-200.0, -200.0, 400.0, 400.0),
+        gases: 50,
+    )],
+    billboards: [(
+        location: (0.0, 100.0),
+        sprite_number: 40,
     )],
 )

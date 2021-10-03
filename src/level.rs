@@ -17,8 +17,9 @@ use ncollide2d::{
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    assets::LevelStorage,
+    assets::{LevelStorage, SpriteStorage},
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
+    billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
@@ -39,7 +40,9 @@ pub struct Level {
     boundaries: (f32, f32),
     player_start: Option<(f32, f32)>,
     deliveries: Vec<(f32, f32)>,
+    pub jump_cost: u64,
     asteroids: Vec<AsteroidDesc>,
+    billboards: Vec<BillboardDesc>,
     modified_prices: Option<HashMap<AsteroidType, f32>>,
 }
 
@@ -170,6 +173,13 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                 );
             }
         }
+    }
+    for billboard_desc in &level.billboards {
+        let spritesheet = {
+            let sprites = world.read_resource::<SpriteStorage>();
+            sprites.sprites.clone()
+        };
+        generate_billboard(world.create_entity(), spritesheet, billboard_desc);
     }
     generate_boundaries(world, level.boundaries);
     world.insert(level);

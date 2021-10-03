@@ -15,6 +15,7 @@ pub enum ParticleType {
     TractorLight,
     TractorPull,
     Delivery,
+    Explosion(usize),
 }
 
 #[derive(Component, Debug)]
@@ -64,8 +65,22 @@ impl Particle {
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
+    pub fn explosion(sprite_numbers: &Vec<usize>, direction: Vector2<f32>) -> Self {
+        Particle {
+            my_type: ParticleType::Explosion(
+                *sprite_numbers
+                    .get((rand::random::<f32>() * sprite_numbers.len() as f32) as usize)
+                    .unwrap(),
+            ),
+            lifetime: rand::random::<f32>() + 0.2,
+            velocity: (rand::random::<f32>() * 100.0 + 100.0, 0.0),
+            delta_velocity: (rand::random::<f32>() * -100.0, 0.0),
+            rotation: f32::atan2(direction.y, direction.x),
+        }
+    }
     fn get_sprite_num(&self) -> usize {
         match self.my_type {
+            ParticleType::Explosion(sprite_number) => sprite_number,
             ParticleType::TractorHeavy => 12,
             ParticleType::TractorLight => 13,
             ParticleType::TractorPull => 14,

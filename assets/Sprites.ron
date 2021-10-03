@@ -239,5 +239,104 @@ List((
       height: 4,
       width: 4,
     ),
+  /* 37/38: Bigger Water */
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 0,
+      y: 55,
+      height: 17,
+      width: 17,
+    ),
+  /* 39-46: Billboards */
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 120,
+      y: 0,
+      height: 8,
+      width: 26,
+    ),
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 120,
+      y: 0,
+      height: 8,
+      width: 26,
+    ),
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 120,
+      y: 0,
+      height: 8,
+      width: 26,
+    ),
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 120,
+      y: 0,
+      height: 8,
+      width: 26,
+    ),
+  /* 47-52: Particles */
+    (
+      x: 44,
+      y: 25,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 13,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 17,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 21,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 17,
+      height: 4,
+      width: 4,
+    ),
+    (
+      x: 44,
+      y: 21,
+      height: 4,
+      width: 4,
+    ),
   ],
 ))

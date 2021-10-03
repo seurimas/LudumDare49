@@ -19,7 +19,6 @@ use crate::{
 pub struct Enterprise {
     fuel: f64,
     funds: u64,
-    jump_cost: u64,
     bankruptcies: usize,
     tried_jump: Option<f32>,
 }
@@ -35,7 +34,6 @@ impl Enterprise {
         Enterprise {
             fuel: 100.0,
             funds: 1_000,
-            jump_cost: 1_000,
             bankruptcies: 0,
             tried_jump: None,
         }
@@ -46,14 +44,18 @@ impl Enterprise {
         self.funds += (mass * ppm) as u64;
     }
 
-    pub fn try_jump(&mut self) -> bool {
-        if self.funds < self.jump_cost {
+    pub fn try_jump(&mut self, level: &Level) -> bool {
+        if !self.can_jump(level) {
             self.tried_jump = Some(3.5);
             false
         } else {
-            self.funds -= self.jump_cost;
+            self.funds -= level.jump_cost;
             true
         }
+    }
+
+    pub fn can_jump(&mut self, level: &Level) -> bool {
+        self.funds >= level.jump_cost
     }
 }
 
@@ -105,10 +107,11 @@ impl<'s> System<'s> for MoneyHudSystem {
         UiFinder<'s>,
         WriteStorage<'s, UiImage>,
         SpriteRes<'s>,
+        Read<'s, Level>,
         Write<'s, Enterprise>,
     );
 
-    fn run(&mut self, (finder, mut images, sprites, mut enterprise): Self::SystemData) {
+    fn run(&mut self, (finder, mut images, sprites, level, mut enterprise): Self::SystemData) {
         if let Some(symbol) = finder.find("insufficient_funds") {
             images.insert(
                 symbol,
@@ -118,10 +121,7 @@ impl<'s> System<'s> for MoneyHudSystem {
         if let Some(symbol) = finder.find("sufficient_funds") {
             images.insert(
                 symbol,
-                MoneyHudSystem::sufficient_funds(
-                    &sprites,
-                    enterprise.funds >= enterprise.jump_cost,
-                ),
+                MoneyHudSystem::sufficient_funds(&sprites, enterprise.can_jump(&level)),
             );
         }
         if let Some(symbol) = finder.find("money_symbol") {

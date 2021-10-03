@@ -5,9 +5,9 @@ Level(
     deliveries: [(0.0, 0.0)],
     jump_cost: 0,
     asteroids: [Field(
-        normal: 800,
+        normal: 80,
         bombs: 40,
-        gases: 400,
+        gases: 40,
     )],
     modified_prices: {
         // Mineral
@@ -31,5 +31,10 @@ Level(
     card: (
         title: "Free Play",
         sprite_number: 0,
+    ),
+    reference: (
+        name: "Free Play",
+        description: "There is no reward, return home whenever.",
+        shown_prices: [Big, Bomb, Water, Hydrogen],
     ),
 )

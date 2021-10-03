@@ -1,13 +1,22 @@
 use amethyst::{
-    assets::{AssetStorage, Format, Handle, Loader, ProgressCounter, RonFormat},
-    audio::{output::Output, Source, SourceHandle, WavFormat},
+    assets::{AssetStorage, Directory, Format, Handle, Loader, ProgressCounter, RonFormat, Source},
+    audio::{
+        output::{init_output, Output},
+        SourceHandle, WavFormat,
+    },
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
     shred::{Read, ResourceId, SystemData, World},
     Error,
 };
+use serde::Deserialize;
 
-use crate::level::{Level, LevelHandle};
+use crate::{
+    level::{Level, LevelHandle},
+    menu::{CardDesc, MenuState, MenuTransition},
+    physics::PhysicsHandle,
+    ASSETS,
+};
 
 pub fn load_sound_file<'a, N>(
     world: &mut World,
@@ -93,7 +102,7 @@ pub struct SoundStorage {
 pub struct SoundPlayer<'a> {
     storage: Option<Read<'a, SoundStorage>>,
     output: Option<Read<'a, Output>>,
-    sources: Read<'a, AssetStorage<Source>>,
+    sources: Read<'a, AssetStorage<amethyst::audio::Source>>,
 }
 
 impl<'a> SoundPlayer<'a> {
@@ -103,5 +112,74 @@ impl<'a> SoundPlayer<'a> {
                 sink.append(sound);
             }
         }
+    }
+}
+
+#[derive(Default)]
+pub struct LoadingState {
+    progress: Option<ProgressCounter>,
+    assets: Option<ASSETS>,
+    levels: Vec<String>,
+}
+
+impl LoadingState {
+    pub fn with_levels(directory: Directory, path: &str) -> amethyst::Result<Self> {
+        let val = directory.load(path)?;
+        let mut de = ron::de::Deserializer::from_bytes(&val)?;
+        let levels = Vec::<String>::deserialize(&mut de)?;
+        de.end()?;
+
+        Ok(LoadingState {
+            progress: None,
+            assets: None,
+            levels,
+        })
+    }
+}
+
+impl SimpleState for LoadingState {
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        data.world.register::<PhysicsHandle>();
+        // data.world.insert(AssetStorage::<TiledMap>::default());
+
+        init_output(data.world);
+
+        let mut progress_counter = ProgressCounter::new();
+        let sprites = load_spritesheet(data.world, "Sprites", &mut progress_counter);
+        let levels = self
+            .levels
+            .iter()
+            .map(|path| load_level(data.world, path.to_string(), &mut progress_counter))
+            .collect();
+        // let main_theme = load_sound_file(data.world, "MainTheme.wav", &mut progress_counter);
+
+        self.progress = Some(progress_counter);
+        self.assets = Some((SpriteStorage { sprites }, LevelStorage { levels }));
+    }
+
+    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+        if let Some(progress) = &self.progress {
+            println!("{:?}", progress);
+            if progress.is_complete() {
+                return SimpleTrans::Switch(Box::new(MenuState::card_menu(
+                    self.assets.clone().unwrap(),
+                    vec![
+                        (
+                            CardDesc::new("Begin Your Enterprise!", 0),
+                            MenuTransition::Begin,
+                        ),
+                        (
+                            CardDesc::new("Continue Your Enterprise!", 0),
+                            MenuTransition::Continue,
+                        ),
+                        (
+                            CardDesc::new("Retire For The Day...", 0),
+                            MenuTransition::Quit,
+                        ),
+                    ],
+                )));
+            }
+        }
+        SimpleTrans::None
     }
 }

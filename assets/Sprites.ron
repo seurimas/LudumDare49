@@ -253,6 +253,7 @@ List((
       width: 17,
     ),
   /* 39-46: Billboards */
+    // Unused
     (
       x: 0,
       y: 42,
@@ -308,6 +309,7 @@ List((
       height: 4,
       width: 4,
     ),
+    // Unused
     (
       x: 44,
       y: 13,

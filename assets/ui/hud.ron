@@ -31,6 +31,140 @@ Container(
                 ),
             ]
         ),
+        Button(
+            transform: (
+                id: "show_reference",
+                anchor: MiddleRight,
+                pivot: MiddleRight,
+                x: 0,
+                y: 0,
+                z: 3,
+                width: 16,
+                height: 96,
+                hidden: true,
+            ),
+            button: (
+                text: "",
+                font_size: 12.,
+                normal_text_color: (0.0, 0.0, 0.0, 0.0),
+                normal_image: PartialTexture(
+                    tex: File("Sprites.png", ("IMAGE", ())),
+                    left: 0.796875,
+                    top: 0.90625,
+                    bottom: 1.0,
+                    right: 0.8125,
+                ),
+            ),
+        ),
+        Container(
+            transform: (
+                id: "reference_area",
+                x: -0.16666,
+                y: 0.,
+                width: 0.33333,
+                height: .8,
+                percent: true,
+                anchor: MiddleRight,
+                hidden: false,
+            ),
+            background: NineSlice(
+                x_start: 464,
+                y_start: 464,
+                width: 48,
+                height: 48,
+                left_dist: 5,
+                top_dist: 5,
+                right_dist: 5,
+                bottom_dist: 5,
+                tex: File("Sprites.png", ("IMAGE", ())),
+                texture_dimensions: (512, 512),
+            ),
+            children: [
+                Label(
+                    transform: (
+                        id: "level_name",
+                        anchor: TopMiddle,
+                        y: -24.,
+                        width: 1.0,
+                        height: 24.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "Test",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 24.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                ),
+                Label(
+                    transform: (
+                        id: "level_description",
+                        anchor: TopMiddle,
+                        y: -48.,
+                        width: 1.0,
+                        height: 18.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "This is a test, this is only a test.",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 18.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                ),
+                Container(
+                    transform: (
+                        id: "price_references",
+                        anchor: Middle,
+                        x: 0.,
+                        y: -36.,
+                        width: 1.,
+                        height: 1.,
+                        stretch: XY( x_margin: 0., y_margin: 48., keep_aspect_ratio: false ),
+                    ),
+                    background: NineSlice(
+                        x_start: 416,
+                        y_start: 464,
+                        width: 48,
+                        height: 48,
+                        left_dist: 5,
+                        top_dist: 5,
+                        right_dist: 5,
+                        bottom_dist: 5,
+                        tex: File("Sprites.png", ("IMAGE", ())),
+                        texture_dimensions: (512, 512),
+                    ),
+                    children: [
+                    ]
+                ),
+                Button(
+                    transform: (
+                        id: "hide_reference",
+                        anchor: MiddleLeft,
+                        pivot: MiddleRight,
+                        x: 0,
+                        y: 0,
+                        z: 3,
+                        width: 16,
+                        height: 96,
+                    ),
+                    button: (
+                        text: "",
+                        font_size: 12.,
+                        normal_text_color: (1.0, 1.0, 1.0, 1.0),
+                        normal_image: PartialTexture(
+                            tex: File("Sprites.png", ("IMAGE", ())),
+                            left: 0.796875,
+                            top: 0.90625,
+                            bottom: 1.0,
+                            right: 0.8125,
+                        ),
+                    ),
+                ),
+            ],
+        ),
         Container(
             transform: (
                 id: "money",

@@ -9,7 +9,7 @@ use std::{
 use amethyst::{
     assets::{AssetStorage, Directory, Processor, ProgressCounter, Source},
     audio::output::init_output,
-    core::{Transform, TransformBundle},
+    core::{HideHierarchySystem, HideHierarchySystemDesc, Transform, TransformBundle},
     ecs::*,
     input::is_close_requested,
     prelude::*,
@@ -24,7 +24,8 @@ use amethyst::{
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
 use assets::{
-    load_level, load_sound_file, load_spritesheet, LevelStorage, SoundStorage, SpriteStorage,
+    load_level, load_sound_file, load_spritesheet, LevelStorage, LoadingState, SoundStorage,
+    SpriteStorage,
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
 use billboards::BillboardBundle;
@@ -129,88 +130,6 @@ impl SimpleState for GameplayState {
     }
 }
 
-#[derive(Default)]
-struct LoadingState {
-    progress: Option<ProgressCounter>,
-    assets: Option<ASSETS>,
-    levels: Vec<String>,
-}
-
-impl LoadingState {
-    fn with_levels(directory: Directory, path: &str) -> amethyst::Result<Self> {
-        let val = directory.load(path)?;
-        let mut de = ron::de::Deserializer::from_bytes(&val)?;
-        let levels = Vec::<String>::deserialize(&mut de)?;
-        de.end()?;
-
-        Ok(LoadingState {
-            progress: None,
-            assets: None,
-            levels,
-        })
-    }
-}
-
-impl SimpleState for LoadingState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
-        data.world.register::<PhysicsHandle>();
-        // data.world.insert(AssetStorage::<TiledMap>::default());
-
-        init_output(data.world);
-
-        let mut progress_counter = ProgressCounter::new();
-        let sprites = load_spritesheet(data.world, "Sprites", &mut progress_counter);
-        let levels = self
-            .levels
-            .iter()
-            .map(|path| load_level(data.world, path.to_string(), &mut progress_counter))
-            .collect();
-        // let main_theme = load_sound_file(data.world, "MainTheme.wav", &mut progress_counter);
-
-        self.progress = Some(progress_counter);
-        self.assets = Some((SpriteStorage { sprites }, LevelStorage { levels }));
-    }
-
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
-        if let Some(progress) = &self.progress {
-            println!("{:?}", progress);
-            if progress.is_complete() {
-                return SimpleTrans::Switch(Box::new(MenuState::card_menu(
-                    self.assets.clone().unwrap(),
-                    vec![
-                        (
-                            CardDesc::new("Begin Your Enterprise!", 0),
-                            MenuTransition::Begin,
-                        ),
-                        (
-                            CardDesc::new("Continue Your Enterprise!", 0),
-                            MenuTransition::Continue,
-                        ),
-                        (
-                            CardDesc::new("Retire For The Day...", 0),
-                            MenuTransition::Quit,
-                        ),
-                    ],
-                )));
-                // return SimpleTrans::Switch(Box::new(GameplayState {
-                //     assets: self.assets.clone().unwrap(),
-                //     enterprise: Enterprise::begin_enterprise(),
-                //     level: self
-                //         .assets
-                //         .clone()
-                //         .unwrap()
-                //         .1
-                //         .levels
-                //         .get(0)
-                //         .unwrap()
-                //         .clone(),
-                // }));
-            }
-        }
-        SimpleTrans::None
-    }
-}
-
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
 
@@ -224,6 +143,7 @@ fn main() -> amethyst::Result<()> {
     let game_data = GameDataBuilder::default()
         .with(Processor::<Level>::new(), "level_loader", &[])
         .with_bundle(TransformBundle::new())?
+        .with_system_desc(HideHierarchySystemDesc, "hide_hieracry", &[])
         .with_bundle(
             amethyst::input::InputBundle::<amethyst::input::StringBindings>::new()
                 .with_bindings_from_file(input_path)?,

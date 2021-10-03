@@ -2,10 +2,11 @@ use std::collections::HashMap;
 
 use amethyst::{
     assets::{Asset, AssetStorage, Handle, ProcessableAsset, ProcessingState},
-    core::{math::Vector3, SystemBundle, Transform},
+    core::{math::Vector3, HiddenPropagate, SystemBundle, Transform},
     ecs::*,
     prelude::*,
     shrev::EventChannel,
+    ui::{UiButtonAction, UiEvent, UiEventType, UiImage, UiText, UiTransform},
     Error,
 };
 use nalgebra::Vector2;
@@ -17,7 +18,7 @@ use ncollide2d::{
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    assets::{LevelStorage, SpriteStorage},
+    assets::{LevelStorage, SpriteRes, SpriteStorage},
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
@@ -37,6 +38,13 @@ pub enum AsteroidDesc {
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
+pub struct ReferenceDesc {
+    name: String,
+    description: String,
+    shown_prices: Vec<AsteroidType>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Level {
     boundaries: (f32, f32),
     player_start: Option<(f32, f32)>,
@@ -46,6 +54,7 @@ pub struct Level {
     asteroids: Vec<AsteroidDesc>,
     billboards: Vec<BillboardDesc>,
     modified_prices: Option<HashMap<AsteroidType, f32>>,
+    reference: ReferenceDesc,
 }
 
 impl Level {
@@ -301,6 +310,95 @@ impl<'s> System<'s> for AsteroidReintroductionSystem {
     }
 }
 
+fn find_by_id<'s>(
+    entities: &Entities<'s>,
+    transforms: &WriteStorage<'s, UiTransform>,
+    id: &'static str,
+) -> Option<Entity> {
+    (entities, transforms)
+        .join()
+        .find(|(_, transform)| transform.id == id)
+        .map(|(entity, _)| entity)
+}
+
+#[derive(Default)]
+pub struct ReferenceCardSystem {
+    reader: Option<ReaderId<UiEvent>>,
+}
+impl<'s> System<'s> for ReferenceCardSystem {
+    type SystemData = (
+        Read<'s, EventChannel<UiEvent>>,
+        WriteStorage<'s, UiTransform>,
+        WriteStorage<'s, UiImage>,
+        WriteStorage<'s, UiText>,
+        WriteStorage<'s, HiddenPropagate>,
+        Entities<'s>,
+        Read<'s, Level>,
+        SpriteRes<'s>,
+    );
+
+    fn setup(&mut self, world: &mut World) {
+        self.reader = Some(
+            world
+                .write_resource::<EventChannel<UiEvent>>()
+                .register_reader(),
+        );
+    }
+
+    fn run(
+        &mut self,
+        (events, transforms, mut images, mut texts, mut hiddens, entities, level, sprites): Self::SystemData,
+    ) {
+        if let Some(reader) = &mut self.reader {
+            for event in events.read(reader) {
+                let target_name = transforms
+                    .get(event.target)
+                    .map(|transform| transform.id.clone())
+                    .unwrap_or_default();
+                if event.event_type != UiEventType::Click {
+                    continue;
+                }
+                match target_name.as_ref() {
+                    "show_reference" => {
+                        if let (Some(hide), Some(show), Some(reference)) = (
+                            find_by_id(&entities, &transforms, "hide_reference"),
+                            find_by_id(&entities, &transforms, "show_reference"),
+                            find_by_id(&entities, &transforms, "reference_area"),
+                        ) {
+                            hiddens.remove(reference);
+                            hiddens.insert(show, HiddenPropagate::new());
+                            hiddens.remove(hide);
+                        }
+                        if let (Some(level_name), Some(level_description)) = (
+                            find_by_id(&entities, &transforms, "level_name"),
+                            find_by_id(&entities, &transforms, "level_description"),
+                        ) {
+                            if let Some(level_name) = texts.get_mut(level_name) {
+                                level_name.text = level.reference.name.clone();
+                            }
+                            if let Some(level_description) = texts.get_mut(level_description) {
+                                level_description.text = level.reference.description.clone();
+                            }
+                        }
+                    }
+                    "hide_reference" => {
+                        if let (Some(hide), Some(show), Some(reference)) = (
+                            find_by_id(&entities, &transforms, "hide_reference"),
+                            find_by_id(&entities, &transforms, "show_reference"),
+                            find_by_id(&entities, &transforms, "reference_area"),
+                        ) {
+                            hiddens.insert(reference, HiddenPropagate::new());
+                            hiddens.insert(hide, HiddenPropagate::new());
+                            hiddens.remove(show);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+}
+
 pub struct LevelBundle;
 
 impl<'a, 'b> SystemBundle<'a, 'b> for LevelBundle {
@@ -311,6 +409,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for LevelBundle {
     ) -> Result<(), Error> {
         dispatcher.add(DummySystem, "boundary_dummy", &[]);
         dispatcher.add(DeliveryAnimationSystem, "delivery_animation", &[]);
+        dispatcher.add(ReferenceCardSystem::default(), "reference_card", &[]);
         dispatcher.add(
             AsteroidReintroductionSystem::default(),
             "asteroid_reintroduction",

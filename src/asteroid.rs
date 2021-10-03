@@ -20,7 +20,7 @@ use crate::{
     physics::{Physics, PhysicsContactEvent, PhysicsDesc, PhysicsHandle},
 };
 
-#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
+#[derive(Debug, PartialEq, Copy, Serialize, Deserialize, Clone, Hash, Eq)]
 pub enum AsteroidType {
     // Mineral
     Big,
@@ -86,6 +86,16 @@ impl AsteroidType {
             AsteroidType::Water => 8.0,
         }
     }
+    pub fn get_base_ppm(&self) -> f32 {
+        match self {
+            AsteroidType::Bomb => 5.0,
+            AsteroidType::Big => 2.0,
+            AsteroidType::Medium => 1.5,
+            AsteroidType::Hydrogen => 1.5,
+            AsteroidType::Oxygen => 1.5,
+            _ => 1.0,
+        }
+    }
     pub fn explodes(&self, other: Self) -> Option<f32> {
         match (self, other) {
             (AsteroidType::Bomb, AsteroidType::Bomb) => Some(500_000.0),
@@ -98,19 +108,6 @@ impl AsteroidType {
             | (AsteroidType::Oxygen, AsteroidType::Hydrogen) => Some((AsteroidType::Water, None)),
             _ => None,
         }
-    }
-
-    pub fn base_prices() -> HashMap<AsteroidType, f32> {
-        let mut prices = HashMap::new();
-        prices.insert(AsteroidType::Bitty, 1.0);
-        prices.insert(AsteroidType::Small, 1.0);
-        prices.insert(AsteroidType::Medium, 1.5);
-        prices.insert(AsteroidType::Big, 2.0);
-        prices.insert(AsteroidType::Bomb, 5.0);
-        prices.insert(AsteroidType::Hydrogen, 1.5);
-        prices.insert(AsteroidType::Oxygen, 1.5);
-        prices.insert(AsteroidType::Water, 1.0);
-        prices
     }
 }
 

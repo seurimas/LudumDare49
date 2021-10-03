@@ -13,6 +13,7 @@ use crate::{
     assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
     economy::Enterprise,
+    level::Level,
     particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     player::Player,
@@ -31,9 +32,16 @@ pub enum DeliveryCorner {
 #[storage(VecStorage)]
 pub struct DeliveryZone {
     cooldown: Option<f32>,
+    jumping: bool,
     arrow_distance: f32,
     size: (f32, f32),
     corners: Vec<Entity>,
+}
+
+impl DeliveryZone {
+    pub fn jumped(&self) -> bool {
+        self.jumping && self.cooldown.is_none()
+    }
 }
 
 #[derive(Component, Debug)]
@@ -111,6 +119,7 @@ pub fn generate_delivery_zone(world: &mut World, size: (f32, f32), transform: Tr
         .with(transform)
         .with(DeliveryZone {
             cooldown: None,
+            jumping: false,
             arrow_distance: 200.0,
             corners,
             size,
@@ -118,7 +127,18 @@ pub fn generate_delivery_zone(world: &mut World, size: (f32, f32), transform: Tr
         .build();
 }
 
-const DELIVERY_TIMESTEPS: [(f32, f32); 4] = [(1.0, 0.9), (2.0, 0.8), (3.0, 0.7), (5.0, 0.4)];
+const DELIVERY_TIMESTEPS: [(f32, f32); 10] = [
+    (1.0, 0.9),
+    (1.0, 0.9),
+    (2.0, 0.8),
+    (2.0, 0.8),
+    (2.0, 0.8),
+    (3.0, 0.7),
+    (5.0, 0.4),
+    (6.0, 0.4),
+    (7.0, 0.4),
+    (8.0, 0.4),
+];
 
 pub struct DeliveryAnimationSystem;
 impl<'s> System<'s> for DeliveryAnimationSystem {
@@ -154,7 +174,9 @@ impl<'s> System<'s> for DeliveryAnimationSystem {
                                     ),
                                 );
                             }
-                            break;
+                            if !delivery.jumping {
+                                break;
+                            }
                         }
                     }
                     Some(cooldown - time.delta_seconds())
@@ -171,6 +193,7 @@ impl<'s> System<'s> for PlayerDeliverySystem {
     type SystemData = (
         Read<'s, InputHandler<StringBindings>>,
         WriteStorage<'s, DeliveryZone>,
+        Read<'s, Level>,
         Write<'s, Enterprise>,
         ReadStorage<'s, PhysicsHandle>,
         ReadStorage<'s, Asteroid>,
@@ -180,7 +203,7 @@ impl<'s> System<'s> for PlayerDeliverySystem {
 
     fn run(
         &mut self,
-        (input, mut deliveries, mut enterprise, handles, asteroids, entities, physics): Self::SystemData,
+        (input, mut deliveries, level, mut enterprise, handles, asteroids, entities, physics): Self::SystemData,
     ) {
         if input.action_is_down("deliver").unwrap_or(false) {
             for (delivery, delivery_handle) in (&mut deliveries, &handles).join() {
@@ -189,8 +212,11 @@ impl<'s> System<'s> for PlayerDeliverySystem {
                 }
                 for (asteroid, handle, entity) in (&asteroids, &handles, &entities).join() {
                     if physics.is_intersecting(delivery_handle, handle) {
-                        enterprise
-                            .deliver(asteroid.my_type, physics.get_mass(handle).unwrap_or(10.0));
+                        enterprise.deliver(
+                            &level,
+                            asteroid.my_type,
+                            physics.get_mass(handle).unwrap_or(10.0),
+                        );
                         entities.delete(entity);
                         delivery.cooldown = Some(5.0);
                     }
@@ -214,7 +240,7 @@ impl<'s> System<'s> for PlayerJumpSystem {
 
     fn run(
         &mut self,
-        (input, mut deliveries, mut enterprise, handles, players, entities, physics): Self::SystemData,
+        (input, mut deliveries, mut enterprise, handles, players, entities, mut physics): Self::SystemData,
     ) {
         if input.action_is_down("deliver").unwrap_or(false) {
             for (delivery, delivery_handle) in (&mut deliveries, &handles).join() {
@@ -222,11 +248,10 @@ impl<'s> System<'s> for PlayerJumpSystem {
                     continue;
                 }
                 for (player, handle, entity) in (&players, &handles, &entities).join() {
-                    // if physics.is_intersecting(delivery_handle, handle) {
-                    //     entities.delete(entity);
-                    // }
                     if enterprise.try_jump() {
-                        delivery.cooldown = Some(5.0);
+                        delivery.cooldown = Some(8.0);
+                        delivery.jumping = true;
+                        physics.set_static(handle);
                     }
                 }
             }

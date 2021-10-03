@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use amethyst::{
     assets::{Asset, AssetStorage, Handle, ProcessableAsset, ProcessingState},
     core::{math::Vector3, SystemBundle, Transform},
@@ -16,7 +18,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
     assets::LevelStorage,
-    asteroid::{generate_asteroid_field, Asteroid},
+    asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
@@ -32,12 +34,23 @@ pub enum AsteroidDesc {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Default)]
 pub struct Level {
     boundaries: (f32, f32),
     player_start: Option<(f32, f32)>,
     deliveries: Vec<(f32, f32)>,
     asteroids: Vec<AsteroidDesc>,
+    modified_prices: Option<HashMap<AsteroidType, f32>>,
+}
+
+impl Level {
+    pub fn get_ppm(&self, asteroid_type: AsteroidType) -> f32 {
+        self.modified_prices
+            .as_ref()
+            .and_then(|modified_prices| modified_prices.get(&asteroid_type))
+            .cloned()
+            .unwrap_or(asteroid_type.get_base_ppm())
+    }
 }
 
 pub type LevelHandle = Handle<Level>;
@@ -134,7 +147,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
         transform.set_translation_y(*y);
         generate_delivery_zone(world, (75.0, 75.0), transform);
     }
-    for asteroid_desc in level.asteroids {
+    for asteroid_desc in &level.asteroids {
         match asteroid_desc {
             AsteroidDesc::Field {
                 location,
@@ -159,6 +172,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
         }
     }
     generate_boundaries(world, level.boundaries);
+    world.insert(level);
 }
 
 #[derive(Default)]

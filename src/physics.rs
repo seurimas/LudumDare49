@@ -194,6 +194,13 @@ impl Physics {
         }
     }
 
+    pub fn set_static(&mut self, handle: &PhysicsHandle) {
+        handle
+            .body
+            .and_then(|handle| self.bodies.get_mut(handle))
+            .map(|body| body.set_status(BodyStatus::Static));
+    }
+
     pub fn change_shape(&mut self, handle: &PhysicsHandle, shape: ShapeHandle<N>) {
         if let Some(handle) = handle.collider {
             if let Some(collider) = self.colliders.get_mut(handle) {

@@ -12,15 +12,16 @@ use amethyst::{
 use crate::{
     assets::{SpriteHandles, SpriteRes},
     asteroid::AsteroidType,
+    level::Level,
 };
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Enterprise {
     fuel: f64,
     funds: u64,
     jump_cost: u64,
     bankruptcies: usize,
     tried_jump: Option<f32>,
-    prices: HashMap<AsteroidType, f32>,
 }
 
 impl Default for Enterprise {
@@ -33,16 +34,15 @@ impl Enterprise {
     pub fn begin_enterprise() -> Self {
         Enterprise {
             fuel: 100.0,
-            funds: 100,
+            funds: 1_000,
             jump_cost: 1_000,
             bankruptcies: 0,
             tried_jump: None,
-            prices: AsteroidType::base_prices(),
         }
     }
 
-    pub fn deliver(&mut self, asteroid: AsteroidType, mass: f32) {
-        let ppm = self.prices.get(&asteroid).cloned().unwrap_or(1.0);
+    pub fn deliver(&mut self, level: &Level, asteroid: AsteroidType, mass: f32) {
+        let ppm = level.get_ppm(asteroid);
         self.funds += (mass * ppm) as u64;
     }
 

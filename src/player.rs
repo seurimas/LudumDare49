@@ -4,8 +4,10 @@ use amethyst::{
     input::{InputHandler, StringBindings},
     prelude::*,
     renderer::{Camera, Sprite, SpriteRender},
+    shred::Fetch,
     shred::World,
     utils::fps_counter::FpsCounter,
+    window::ScreenDimensions,
     Error,
 };
 use nalgebra::Vector2;
@@ -30,19 +32,20 @@ pub struct Player {
     pub state: PlayerState,
 }
 
-const ARENA_WIDTH: f32 = 480.0;
-const ARENA_HEIGHT: f32 = 320.0;
-fn standard_camera() -> Camera {
-    Camera::standard_2d(ARENA_WIDTH, ARENA_HEIGHT)
-}
-
-fn initialize_camera(builder: impl Builder, player: &Entity) -> Entity {
+fn initialize_camera(
+    builder: impl Builder,
+    screen_dimensions: (f32, f32),
+    player: &Entity,
+) -> Entity {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
     transform.set_translation_xyz(0.0, 0.0, 100.0);
 
     builder
-        .with(standard_camera())
+        .with(Camera::standard_2d(
+            screen_dimensions.0,
+            screen_dimensions.1,
+        ))
         .with(Parent { entity: *player })
         .with(transform)
         .build()
@@ -68,7 +71,11 @@ pub fn initialize_player(world: &mut World, transform: Transform) {
         .with(PhysicsDesc::new(body, collider))
         .with(transform)
         .build();
-    initialize_camera(world.create_entity(), &player);
+    let (width, height) = {
+        let dimensions = world.read_resource::<ScreenDimensions>();
+        (dimensions.width(), dimensions.height())
+    };
+    initialize_camera(world.create_entity(), (width, height), &player);
 }
 
 struct PlayerMovementSystem;

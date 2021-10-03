@@ -1,6 +1,10 @@
+#[allow(warnings)]
 #[macro_use]
 extern crate serde;
-use std::path::{Path, PathBuf};
+use std::{
+    ops::Deref,
+    path::{Path, PathBuf},
+};
 
 use amethyst::{
     assets::{AssetStorage, Directory, Processor, ProgressCounter, Source},
@@ -23,6 +27,7 @@ use assets::{
     load_level, load_sound_file, load_spritesheet, LevelStorage, SoundStorage, SpriteStorage,
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
+use delivery::DeliveryZone;
 use economy::{EconomyBundle, Enterprise};
 use level::{generate_boundaries, initialize_level, Level, LevelBundle, LevelHandle};
 use particles::ParticleBundle;
@@ -47,13 +52,14 @@ type ASSETS = (SpriteStorage, LevelStorage);
 struct GameplayState {
     assets: ASSETS,
     level: LevelHandle,
+    enterprise: Enterprise,
 }
 impl SimpleState for GameplayState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         data.world.delete_all();
         data.world.insert(self.assets.0.clone());
         data.world.insert(self.assets.1.clone());
-        data.world.insert(Enterprise::begin_enterprise());
+        data.world.insert(self.enterprise.clone());
         initialize_level(data.world, &self.level);
         data.world.exec(|mut creator: UiCreator<'_>| {
             creator.create("hud.ron", ());
@@ -99,6 +105,19 @@ impl SimpleState for GameplayState {
         //         menu: "game_over.ron",
         //     }));
         // }
+        if data.world.exec(|deliveries: ReadStorage<DeliveryZone>| {
+            (&deliveries)
+                .join()
+                .find(|delivery| delivery.jumped())
+                .is_some()
+        }) {
+            let enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
+            return SimpleTrans::Switch(Box::new(GameplayState {
+                assets: self.assets.clone(),
+                level: self.level.clone(),
+                enterprise,
+            }));
+        }
         SimpleTrans::None
     }
 }
@@ -134,6 +153,7 @@ impl SimpleState for MenuState {
                         if start == ui_event.target {
                             return Trans::Push(Box::new(GameplayState {
                                 assets: self.assets.clone(),
+                                enterprise: Enterprise::begin_enterprise(),
                                 level: self.assets.1.levels.get(0).unwrap().clone(),
                             }));
                         }
@@ -203,6 +223,7 @@ impl SimpleState for LoadingState {
                 // }));
                 return SimpleTrans::Switch(Box::new(GameplayState {
                     assets: self.assets.clone().unwrap(),
+                    enterprise: Enterprise::begin_enterprise(),
                     level: self
                         .assets
                         .clone()

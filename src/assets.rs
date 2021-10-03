@@ -177,6 +177,7 @@ impl SimpleState for LoadingState {
                             MenuTransition::Quit,
                         ),
                     ],
+                    None,
                 )));
             }
         }

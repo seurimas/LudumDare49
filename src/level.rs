@@ -23,7 +23,7 @@ use crate::{
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
-    menu::CardDesc,
+    menu::{find_by_id, CardDesc},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
 };
@@ -35,12 +35,14 @@ pub enum AsteroidDesc {
         normal: Option<usize>,
         bombs: Option<usize>,
         gases: Option<usize>,
+        sulphur: Option<usize>,
+        debris: Option<(usize, f32)>,
     },
 }
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct ReferenceDesc {
-    name: String,
+    pub name: String,
     description: String,
     shown_prices: Vec<AsteroidType>,
 }
@@ -51,11 +53,11 @@ pub struct Level {
     player_start: Option<(f32, f32)>,
     deliveries: Vec<(f32, f32)>,
     pub jump_cost: u64,
-    card: CardDesc,
+    pub card: CardDesc,
     asteroids: Vec<AsteroidDesc>,
     billboards: Vec<BillboardDesc>,
     modified_prices: Option<HashMap<AsteroidType, f32>>,
-    reference: ReferenceDesc,
+    pub reference: ReferenceDesc,
 }
 
 impl Level {
@@ -169,6 +171,8 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                 normal,
                 bombs,
                 gases,
+                sulphur,
+                debris,
             } => {
                 let mut transform = Transform::default();
                 let location =
@@ -181,6 +185,8 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                     normal.unwrap_or_default(),
                     bombs.unwrap_or_default(),
                     gases.unwrap_or_default(),
+                    sulphur.unwrap_or_default(),
+                    debris.unwrap_or_default(),
                     transform,
                 );
             }
@@ -311,17 +317,6 @@ impl<'s> System<'s> for AsteroidReintroductionSystem {
     }
 }
 
-fn find_by_id<'s>(
-    entities: &Entities<'s>,
-    transforms: &WriteStorage<'s, UiTransform>,
-    id: &str,
-) -> Option<Entity> {
-    (entities, transforms)
-        .join()
-        .find(|(_, transform)| transform.id == id)
-        .map(|(entity, _)| entity)
-}
-
 #[derive(Default)]
 pub struct ReferenceCardSystem {
     reader: Option<ReaderId<UiEvent>>,
@@ -370,15 +365,19 @@ impl<'s> System<'s> for ReferenceCardSystem {
                             hiddens.insert(show, HiddenPropagate::new());
                             hiddens.remove(hide);
                         }
-                        if let (Some(level_name), Some(level_description)) = (
+                        if let (Some(level_name), Some(level_description), Some(fuel_cost)) = (
                             find_by_id(&entities, &transforms, "level_name"),
                             find_by_id(&entities, &transforms, "level_description"),
+                            find_by_id(&entities, &transforms, "fuel_cost"),
                         ) {
                             if let Some(level_name) = texts.get_mut(level_name) {
                                 level_name.text = level.reference.name.clone();
                             }
                             if let Some(level_description) = texts.get_mut(level_description) {
                                 level_description.text = level.reference.description.clone();
+                            }
+                            if let Some(fuel_cost) = texts.get_mut(fuel_cost) {
+                                fuel_cost.text = format!("Cost to jump: {}", level.jump_cost);
                             }
                         }
                         for idx in 0..6 {

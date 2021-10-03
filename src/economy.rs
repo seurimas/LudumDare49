@@ -5,14 +5,15 @@ use amethyst::{
     ecs::*,
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, SpriteRender},
-    ui::{UiFinder, UiImage},
+    ui::{UiFinder, UiImage, UiTransform},
     Error,
 };
 
 use crate::{
     assets::{SpriteHandles, SpriteRes},
     asteroid::AsteroidType,
-    level::Level,
+    level::{Level, LevelHandle},
+    menu::find_by_id,
 };
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -21,6 +22,7 @@ pub struct Enterprise {
     funds: u64,
     bankruptcies: usize,
     tried_jump: Option<f32>,
+    last_completions: Vec<String>,
 }
 
 impl Default for Enterprise {
@@ -36,6 +38,7 @@ impl Enterprise {
             funds: 1_000,
             bankruptcies: 0,
             tried_jump: None,
+            last_completions: Vec::new(),
         }
     }
 
@@ -50,12 +53,33 @@ impl Enterprise {
             false
         } else {
             self.funds -= level.jump_cost;
+            self.last_completions.push(level.reference.name.clone());
+            self.last_completions.truncate(6);
             true
         }
     }
 
     pub fn can_jump(&mut self, level: &Level) -> bool {
         self.funds >= level.jump_cost
+    }
+
+    pub fn get_next_levels(&self, levels: Vec<(Level, LevelHandle)>) -> Vec<(Level, LevelHandle)> {
+        if self.last_completions.len() == 1 {
+            levels
+                .iter()
+                .filter(|(level, handle)| level.reference.name != "Tutorial")
+                .filter(|(level, handle)| level.reference.name == "Striking Out!")
+                .cloned()
+                .collect()
+        } else {
+            levels
+                .iter()
+                .filter(|(level, handle)| level.reference.name != "Tutorial")
+                .filter(|(level, handle)| level.reference.name != "Striking Out!")
+                .filter(|(level, handle)| !self.last_completions.contains(&level.reference.name))
+                .cloned()
+                .collect()
+        }
     }
 }
 
@@ -104,31 +128,42 @@ impl MoneyHudSystem {
 }
 impl<'s> System<'s> for MoneyHudSystem {
     type SystemData = (
-        UiFinder<'s>,
+        Entities<'s>,
+        WriteStorage<'s, UiTransform>,
         WriteStorage<'s, UiImage>,
         SpriteRes<'s>,
         Read<'s, Level>,
         Write<'s, Enterprise>,
     );
 
-    fn run(&mut self, (finder, mut images, sprites, level, mut enterprise): Self::SystemData) {
-        if let Some(symbol) = finder.find("insufficient_funds") {
+    fn run(
+        &mut self,
+        (entities, mut transforms, mut images, sprites, level, mut enterprise): Self::SystemData,
+    ) {
+        if let Some(symbol) = find_by_id(&entities, &transforms, "insufficient_funds") {
             images.insert(
                 symbol,
                 MoneyHudSystem::insufficient_funds(&sprites, enterprise.tried_jump.is_some()),
             );
         }
-        if let Some(symbol) = finder.find("sufficient_funds") {
+        if let Some(symbol) = find_by_id(&entities, &transforms, "sufficient_funds") {
             images.insert(
                 symbol,
                 MoneyHudSystem::sufficient_funds(&sprites, enterprise.can_jump(&level)),
             );
         }
-        if let Some(symbol) = finder.find("money_symbol") {
+        if let Some(symbol) = find_by_id(&entities, &transforms, "money_symbol") {
             images.insert(symbol, MoneyHudSystem::symbol(&sprites));
         }
+        if let Some(fuel_level) = find_by_id(&entities, &transforms, "fuel_value") {
+            if let Some(fuel_level) = transforms.get_mut(fuel_level) {
+                fuel_level.width = (180.0 * enterprise.fuel / 100.0) as f32;
+            }
+        }
         for idx in 0..11 {
-            if let Some(digit) = finder.find(format!("money_{}", idx).as_ref()) {
+            if let Some(digit) =
+                find_by_id(&entities, &transforms, format!("money_{}", idx).as_ref())
+            {
                 images.insert(
                     digit,
                     MoneyHudSystem::digit(&sprites, idx, enterprise.funds),

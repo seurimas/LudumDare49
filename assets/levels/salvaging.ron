@@ -1,0 +1,64 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 2000,
+    asteroids: [Field(
+        normal: 100,
+        bombs: 20,
+        gases: 200,
+        sulphur: 100,
+        debris: (5, 1.)
+    ), Field(
+        location: (1000.0, 2000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    ), Field(
+        location: (-1000.0, -2000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    ), Field(
+        location: (2000.0, -1000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    ), Field(
+        location: (-2000.0, 1000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    )],
+    modified_prices: {
+        ShipPiece(0): 7.0,
+        ShipPiece(1): 7.0,
+        ShipPiece(2): 7.0,
+        ShipPiece(3): 7.0,
+        ShipPiece(4): 7.0,
+        ShipPiece(5): 7.0,
+        ShipPiece(6): 7.0,
+        ShipPieceTarnished(0): 0.05,
+        ShipPieceTarnished(1): 0.05,
+        ShipPieceTarnished(2): 0.05,
+        ShipPieceTarnished(3): 0.05,
+        ShipPieceTarnished(4): 0.05,
+        ShipPieceTarnished(5): 0.05,
+        ShipPieceTarnished(6): 0.05,
+    },
+    billboards: [],
+    card: (
+        title: "Battle Salvage",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Battle Salvage",
+        description: "Use acid to wash battle debris!",
+        shown_prices: [ShipPiece(1), ShipPieceTarnished(1), Acid, Sulphur, Water],
+    ),
+)

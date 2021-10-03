@@ -1,13 +1,18 @@
 use amethyst::{
-    core::Parent,
-    ecs::WriteStorage,
+    assets::AssetStorage,
+    core::{HiddenPropagate, Parent},
+    ecs::*,
     input::is_close_requested,
     prelude::*,
-    ui::{UiCreator, UiEventType, UiFinder, UiImage, UiText},
+    ui::{UiCreator, UiEventType, UiFinder, UiImage, UiText, UiTransform},
     GameData, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
 
-use crate::{economy::Enterprise, GameplayState, ASSETS};
+use crate::{
+    economy::Enterprise,
+    level::{Level, LevelHandle},
+    GameplayState, ASSETS,
+};
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct CardDesc {
@@ -30,19 +35,53 @@ impl CardDesc {
 pub enum MenuTransition {
     Begin,
     Continue,
-    Level,
+    Level(Level, LevelHandle),
     Quit,
 }
 
 pub struct MenuState {
     assets: ASSETS,
     menu: &'static str,
+    enterprise: Option<Enterprise>,
     cards: Vec<(CardDesc, MenuTransition)>,
     initialized: bool,
 }
 
+pub fn find_by_id<'s>(
+    entities: &Entities<'s>,
+    transforms: &WriteStorage<'s, UiTransform>,
+    id: &str,
+) -> Option<Entity> {
+    (entities, transforms)
+        .join()
+        .find(|(_, transform)| transform.id == id)
+        .map(|(entity, _)| entity)
+}
+
 impl MenuState {
-    pub fn card_menu(assets: ASSETS, cards: Vec<(CardDesc, MenuTransition)>) -> MenuState {
+    pub fn end_level(assets: ASSETS, enterprise: Option<Enterprise>) -> MenuState {
+        MenuState {
+            assets,
+            menu: "ui/end_level_menu.ron",
+            enterprise,
+            cards: vec![
+                (
+                    CardDesc::new("Continue Your Enterprise!", 0),
+                    MenuTransition::Continue,
+                ),
+                (
+                    CardDesc::new("Retire For The Day...", 0),
+                    MenuTransition::Quit,
+                ),
+            ],
+            initialized: false,
+        }
+    }
+    pub fn card_menu(
+        assets: ASSETS,
+        cards: Vec<(CardDesc, MenuTransition)>,
+        enterprise: Option<Enterprise>,
+    ) -> MenuState {
         let menu = match cards.len() {
             3 => "ui/three_menu.ron",
             _ => panic!(
@@ -53,6 +92,34 @@ impl MenuState {
         MenuState {
             assets,
             menu,
+            enterprise,
+            cards,
+            initialized: false,
+        }
+    }
+    pub fn level_menu(
+        assets: ASSETS,
+        mut levels: Vec<(Level, LevelHandle)>,
+        enterprise: Option<Enterprise>,
+    ) -> MenuState {
+        let mut cards = vec![];
+        if let Some(enterprise) = &enterprise {
+            levels = enterprise.get_next_levels(levels);
+        }
+        for (level, handle) in levels.iter() {
+            cards.push((
+                level.card.clone(),
+                MenuTransition::Level(level.clone(), handle.clone()),
+            ));
+        }
+        cards.push((
+            CardDesc::new("Retire For The Day...", 0),
+            MenuTransition::Quit,
+        ));
+        MenuState {
+            assets,
+            menu: "ui/six_menu.ron",
+            enterprise,
             cards,
             initialized: false,
         }
@@ -73,21 +140,26 @@ impl SimpleState for MenuState {
             let menu = data.world.exec(|finder: UiFinder<'_>| finder.find("menu"));
             if let Some(menu) = menu {
                 data.world.exec(
-                    |(mut ui_text, mut ui_image, finder): (
-                        WriteStorage<UiText>,
+                    |(mut transforms, mut images, mut texts, mut hiddens, entities): (
+                        WriteStorage<UiTransform>,
                         WriteStorage<UiImage>,
-                        UiFinder,
+                        WriteStorage<UiText>,
+                        WriteStorage<HiddenPropagate>,
+                        Entities,
                     )| {
-                        for i in 0.. {
-                            if let (Some(label), Some(card)) = (
-                                finder.find(format!("card_label_{}", i).as_ref()),
-                                self.cards.get(i),
-                            ) {
-                                if let Some(label) = ui_text.get_mut(label) {
-                                    label.text = card.0.title.clone();
+                        for i in 0..6 {
+                            if let Some(card) = self.cards.get(i) {
+                                if let (Some(title_ref)) =
+                                    find_by_id(&entities, &transforms, &format!("card_label_{}", i))
+                                {
+                                    if let Some(text) = texts.get_mut(title_ref) {
+                                        text.text = card.0.title.clone();
+                                    }
                                 }
-                            } else {
-                                break;
+                            } else if let Some(entity) =
+                                find_by_id(&entities, &transforms, &format!("card_container_{}", i))
+                            {
+                                hiddens.insert(entity, HiddenPropagate::new());
                             }
                         }
                     },
@@ -111,37 +183,62 @@ impl SimpleState for MenuState {
                     Trans::None
                 }
             }
-            StateEvent::Ui(ui_event) => data.world.exec(|finder: UiFinder<'_>| {
-                if ui_event.event_type == UiEventType::Click {
-                    for i in 0.. {
-                        if let (Some(card_entity), Some(card)) = (
-                            finder.find(format!("card_container_{}", i).as_ref()),
-                            self.cards.get(i),
-                        ) {
-                            if card_entity == ui_event.target {
-                                match card.1 {
-                                    MenuTransition::Begin => {
-                                        return Trans::Push(Box::new(GameplayState {
-                                            assets: self.assets.clone(),
-                                            enterprise: Enterprise::begin_enterprise(),
-                                            level: self.assets.1.levels.get(0).unwrap().clone(),
-                                        }));
-                                    }
-                                    MenuTransition::Quit => {
-                                        return Trans::Quit;
-                                    }
-                                    _ => {
-                                        return Trans::None;
+            StateEvent::Ui(ui_event) => data.world.exec(
+                |(finder, level_storage): (UiFinder, Read<AssetStorage<Level>>)| {
+                    if ui_event.event_type == UiEventType::Click {
+                        for i in 0.. {
+                            if let (Some(card_entity), Some(card)) = (
+                                finder.find(format!("card_container_{}", i).as_ref()),
+                                self.cards.get(i),
+                            ) {
+                                if card_entity == ui_event.target {
+                                    match &card.1 {
+                                        MenuTransition::Begin => {
+                                            return Trans::Push(Box::new(GameplayState {
+                                                assets: self.assets.clone(),
+                                                enterprise: Enterprise::begin_enterprise(),
+                                                level: self.assets.1.levels.get(0).unwrap().clone(),
+                                            }));
+                                        }
+                                        MenuTransition::Continue => {
+                                            let mut levels = Vec::new();
+                                            for handle in self.assets.1.levels.iter() {
+                                                if let Some(level) = level_storage.get(&handle) {
+                                                    levels.push((level.clone(), handle.clone()));
+                                                }
+                                            }
+                                            return Trans::Push(Box::new(MenuState::level_menu(
+                                                self.assets.clone(),
+                                                levels,
+                                                self.enterprise.clone(),
+                                            )));
+                                        }
+                                        MenuTransition::Level(level, handle) => {
+                                            return Trans::Push(Box::new(GameplayState {
+                                                assets: self.assets.clone(),
+                                                enterprise: self
+                                                    .enterprise
+                                                    .clone()
+                                                    .unwrap_or(Enterprise::begin_enterprise()),
+                                                level: handle.clone(),
+                                            }));
+                                        }
+                                        MenuTransition::Quit => {
+                                            return Trans::Quit;
+                                        }
+                                        _ => {
+                                            return Trans::None;
+                                        }
                                     }
                                 }
+                            } else {
+                                break;
                             }
-                        } else {
-                            break;
                         }
                     }
-                }
-                Trans::None
-            }),
+                    Trans::None
+                },
+            ),
             _ => Trans::None,
         }
     }

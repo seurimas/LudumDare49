@@ -114,6 +114,23 @@ Container(
                         align: Middle,
                     )
                 ),
+                Label(
+                    transform: (
+                        id: "fuel_cost",
+                        anchor: TopMiddle,
+                        y: -72.,
+                        width: 1.0,
+                        height: 18.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "This is a test, this is only a test.",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 18.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                ),
                 Container(
                     transform: (
                         id: "price_references",
@@ -344,6 +361,62 @@ Container(
                     ),
                 ),
             ],
+        ),
+        Image(
+            transform: (
+                id: "fuel_icon",
+                anchor: TopLeft,
+                pivot: TopLeft,
+                x: 10,
+                y: -47.,
+                z: 1,
+                width: 22.0,
+                height: 22.0,
+            ),
+            image: PartialTexture(
+                tex: File("Sprites.png", ("IMAGE", ())),
+                top: 0.048828125,
+                left: 0.296875,
+                right: 0.314453125,
+                bottom: 0.06640625,
+            ),
+        ),
+        Image(
+            transform: (
+                id: "fuel_background",
+                anchor: TopLeft,
+                pivot: TopLeft,
+                x: 42,
+                y: -47.,
+                z: 1,
+                width: 192.0,
+                height: 22.0,
+            ),
+            image: NineSlice(
+                x_start: 464,
+                y_start: 464,
+                width: 48,
+                height: 48,
+                left_dist: 5,
+                top_dist: 5,
+                right_dist: 5,
+                bottom_dist: 5,
+                tex: File("Sprites.png", ("IMAGE", ())),
+                texture_dimensions: (512, 512),
+            ),
+        ),
+        Image(
+            transform: (
+                id: "fuel_value",
+                anchor: TopLeft,
+                pivot: TopLeft,
+                x: 47,
+                y: -52,
+                z: 2,
+                width: 180.0,
+                height: 12.0,
+            ),
+            image: SolidColor(0.92, 1.0, 0.0, 1.0),
         ),
         Container(
             transform: (

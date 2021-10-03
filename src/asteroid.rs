@@ -29,12 +29,20 @@ pub enum AsteroidType {
     Bitty,
     // Explosive
     Bomb,
-    // Reactive
+    // Waters
     Hydrogen,
     Oxygen,
     Water,
     WaterMedium,
     WaterBig,
+    // Acids
+    Sulphur,
+    Acid,
+    AcidMedium,
+    AcidBig,
+    // Ship Pieces
+    ShipPiece(usize),
+    ShipPieceTarnished(usize),
 }
 
 #[derive(Component, Debug)]
@@ -56,9 +64,15 @@ impl AsteroidType {
             // Reactive
             AsteroidType::Hydrogen => 27,
             AsteroidType::Oxygen => 28,
+            AsteroidType::Sulphur => 68,
             AsteroidType::Water => 29,
             AsteroidType::WaterMedium => 37,
             AsteroidType::WaterBig => 38,
+            AsteroidType::Acid => 53,
+            AsteroidType::AcidMedium => 54,
+            AsteroidType::AcidBig => 55,
+            AsteroidType::ShipPiece(idx) => 56 + idx,
+            AsteroidType::ShipPieceTarnished(idx) => 62 + idx,
         }
     }
     pub fn get_radius(&self) -> f32 {
@@ -73,9 +87,12 @@ impl AsteroidType {
             // Reactive
             AsteroidType::Hydrogen => 4.0,
             AsteroidType::Oxygen => 4.0,
-            AsteroidType::Water => 4.0,
-            AsteroidType::WaterMedium => 6.0,
-            AsteroidType::WaterBig => 8.0,
+            AsteroidType::Sulphur => 4.0,
+            AsteroidType::Water | AsteroidType::Acid => 4.0,
+            AsteroidType::WaterMedium | AsteroidType::AcidMedium => 6.0,
+            AsteroidType::WaterBig | AsteroidType::AcidBig => 8.0,
+            // Ship
+            AsteroidType::ShipPiece(_) | AsteroidType::ShipPieceTarnished(_) => 4.0,
         }
     }
     pub fn get_mass(&self) -> f32 {
@@ -92,15 +109,23 @@ impl AsteroidType {
             AsteroidType::Water => 8.0,
             AsteroidType::WaterMedium => 16.0,
             AsteroidType::WaterBig => 32.0,
+            // Acids
+            AsteroidType::Sulphur => 4.0,
+            AsteroidType::Acid => 12.0,
+            AsteroidType::AcidMedium => 20.0,
+            AsteroidType::AcidBig => 36.0,
+            // Ship Pieces
+            AsteroidType::ShipPiece(_) | AsteroidType::ShipPieceTarnished(_) => 80.0,
         }
     }
     pub fn get_base_ppm(&self) -> f32 {
         match self {
-            AsteroidType::Bomb => 5.0,
+            AsteroidType::Bomb => 0.5,
             AsteroidType::Big => 2.0,
             AsteroidType::Medium => 1.5,
             AsteroidType::Hydrogen => 1.5,
             AsteroidType::Oxygen => 1.5,
+            AsteroidType::ShipPieceTarnished(_) => 0.1,
             _ => 1.0,
         }
     }
@@ -112,13 +137,37 @@ impl AsteroidType {
             _ => None,
         }
     }
-    pub fn reacts(&self, other: Self) -> Option<(Self, Option<Self>)> {
+    pub fn reacts(&self, other: Self) -> Option<(Option<Self>, Option<Self>)> {
         match (self, other) {
             (AsteroidType::Hydrogen, AsteroidType::Oxygen)
-            | (AsteroidType::Oxygen, AsteroidType::Hydrogen) => Some((AsteroidType::Water, None)),
-            (AsteroidType::Water, AsteroidType::Water) => Some((AsteroidType::WaterMedium, None)),
+            | (AsteroidType::Oxygen, AsteroidType::Hydrogen) => {
+                Some((Some(AsteroidType::Water), None))
+            }
+            (AsteroidType::Water, AsteroidType::Water) => {
+                Some((Some(AsteroidType::WaterMedium), None))
+            }
             (AsteroidType::WaterMedium, AsteroidType::WaterMedium) => {
-                Some((AsteroidType::WaterBig, None))
+                Some((Some(AsteroidType::WaterBig), None))
+            }
+            (AsteroidType::Water, AsteroidType::Sulphur) => Some((Some(AsteroidType::Acid), None)),
+            (AsteroidType::WaterMedium, AsteroidType::Sulphur) => {
+                Some((Some(AsteroidType::AcidMedium), None))
+            }
+            (AsteroidType::WaterBig, AsteroidType::Sulphur) => {
+                Some((Some(AsteroidType::AcidBig), None))
+            }
+            (AsteroidType::Sulphur, AsteroidType::Water) => Some((None, Some(AsteroidType::Acid))),
+            (AsteroidType::Sulphur, AsteroidType::WaterMedium) => {
+                Some((None, Some(AsteroidType::AcidMedium)))
+            }
+            (AsteroidType::Sulphur, AsteroidType::WaterBig) => {
+                Some((None, Some(AsteroidType::AcidBig)))
+            }
+            (AsteroidType::Acid, AsteroidType::ShipPieceTarnished(idx)) => {
+                Some((None, Some(AsteroidType::ShipPiece(idx))))
+            }
+            (AsteroidType::ShipPieceTarnished(idx), AsteroidType::Acid) => {
+                Some((Some(AsteroidType::ShipPiece(*idx)), None))
             }
             _ => None,
         }
@@ -175,6 +224,8 @@ pub fn generate_asteroid_field(
     asteroid_count: usize,
     bomb_count: usize,
     gas_count: usize,
+    sulphur_count: usize,
+    debris_count: (usize, f32),
     transform: Transform,
 ) {
     let spritesheet = {
@@ -223,6 +274,34 @@ pub fn generate_asteroid_field(
                 AsteroidType::Hydrogen
             } else {
                 AsteroidType::Oxygen
+            },
+            transform,
+        );
+    }
+    for _ in 0..sulphur_count {
+        let x = rand::random::<f32>() * size.0;
+        let y = rand::random::<f32>() * size.1;
+        let mut transform = transform.clone();
+        transform.append_translation_xyz(x, y, 0.0);
+        generate_asteroid(
+            world.create_entity(),
+            spritesheet.clone(),
+            AsteroidType::Sulphur,
+            transform,
+        );
+    }
+    for _ in 0..debris_count.0 {
+        let x = rand::random::<f32>() * size.0;
+        let y = rand::random::<f32>() * size.1;
+        let mut transform = transform.clone();
+        transform.append_translation_xyz(x, y, 0.0);
+        generate_asteroid(
+            world.create_entity(),
+            spritesheet.clone(),
+            if rand::random::<f32>() > debris_count.1 {
+                AsteroidType::ShipPiece((rand::random::<f32>() * 6.0) as usize)
+            } else {
+                AsteroidType::ShipPieceTarnished((rand::random::<f32>() * 6.0) as usize)
             },
             transform,
         );
@@ -355,10 +434,14 @@ impl<'s> System<'s> for AsteroidReactionSystem {
                                 }
                             };
                             if let Some((reaction_a, reaction_b)) = reaction {
-                                asteroids
-                                    .get_mut(*a)
-                                    .map(|asteroid| asteroid.my_type = reaction_a);
-                                update.exec(resize_asteroid(*a));
+                                if let Some(reaction_a) = reaction_a {
+                                    asteroids
+                                        .get_mut(*a)
+                                        .map(|asteroid| asteroid.my_type = reaction_a);
+                                    update.exec(resize_asteroid(*a));
+                                } else {
+                                    entities.delete(*a);
+                                }
 
                                 if let Some(reaction_b) = reaction_b {
                                     asteroids

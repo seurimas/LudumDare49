@@ -340,5 +340,130 @@ List((
       height: 4,
       width: 4,
     ),
+  /* 53-72: Other Asteroids */
+    (
+      x: 0,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 0,
+      y: 81,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 0,
+      y: 94,
+      height: 17,
+      width: 17,
+    ),
+    // 56-61: Untarnished ship
+    (
+      x: 24,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 33,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 42,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 51,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 60,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 69,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    // 62-67: Tarnished ship
+    (
+      x: 24,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 33,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 42,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 51,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 60,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    (
+      x: 69,
+      y: 81,
+      height: 9,
+      width: 9,
+    ),
+    // 68: Sulphur
+    (
+      x: 9,
+      y: 72,
+      height: 9,
+      width: 9,
+    ),
+    // Unused
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 0,
+      y: 55,
+      height: 17,
+      width: 17,
+    ),
+    (
+      x: 0,
+      y: 42,
+      height: 13,
+      width: 13,
+    ),
+    (
+      x: 0,
+      y: 55,
+      height: 17,
+      width: 17,
+    ),
   ],
 ))

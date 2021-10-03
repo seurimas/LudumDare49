@@ -1,0 +1,29 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 500,
+    asteroids: [Field(
+        normal: 200,
+        bombs: 40,
+        gases: 800,
+    )],
+    modified_prices: {
+        WaterBig: 7.0,
+        WaterMedium: 7.0,
+        Water: 7.0,
+        Hydrogen: 1.0,
+        Oxygen: 1.0,
+    },
+    billboards: [],
+    card: (
+        title: "Beach Day",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Beach Day",
+        description: "Combine hydrogen and oxygen to form ice",
+        shown_prices: [WaterBig, Hydrogen, Oxygen, Big, Medium, Bomb],
+    ),
+)

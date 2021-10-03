@@ -1,40 +1,23 @@
 #![enable(implicit_some)]
 Level(
-    boundaries: (4000.0, 4000.0),
-    player_state: (0.0, 0.0),
-    deliveries: [(0.0, 0.0)],
-    jump_cost: 0,
+    boundaries: (500.0, 4000.0),
+    player_state: (0.0, -2000.0),
+    deliveries: [(0.0, 2000.0)],
+    jump_cost: 100,
     asteroids: [Field(
         normal: 80,
-        bombs: 40,
-        gases: 40,
+        bombs: 0,
+        gases: 20,
     )],
-    modified_prices: {
-        // Mineral
-        Big: 0.,
-        Medium: 0.,
-        Small: 0.,
-        Bitty: 0.,
-        // Explosive
-        Bomb: 0.,
-        // Reactive
-        Hydrogen: 0.,
-        Oxygen: 0.,
-        Water: 0.,
-        WaterMedium: 0.,
-        WaterBig: 0.,
-    },
-    billboards: [(
-        location: (0.0, 100.0),
-        sprite_number: 40,
-    )],
+    modified_prices: {},
+    billboards: [],
     card: (
-        title: "Free Play",
+        title: "Tutorial",
         sprite_number: 0,
     ),
     reference: (
-        name: "Free Play",
-        description: "There is no reward, return home whenever.",
-        shown_prices: [Big, Bomb, Water, Hydrogen],
+        name: "Tutorial",
+        description: "Earn money by delivering asteroids.",
+        shown_prices: [Big, Medium, Bomb, Water, Hydrogen],
     ),
 )

@@ -1,0 +1,27 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 400,
+    asteroids: [Field(
+        normal: 800,
+        bombs: 160,
+        gases: 200,
+        sulphur: 5,
+        debris: (5, 1.)
+    )],
+    modified_prices: {
+        Bomb: 7.0,
+    },
+    billboards: [],
+    card: (
+        title: "Munitions Recovery",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Munitions Recovery",
+        description: "Earn big by delivering bombs!",
+        shown_prices: [Bomb, Big, Water, Hydrogen, ShipPiece(5)],
+    ),
+)

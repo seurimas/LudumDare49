@@ -120,11 +120,10 @@ impl SimpleState for GameplayState {
                 .is_some()
         }) {
             let enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
-            return SimpleTrans::Switch(Box::new(GameplayState {
-                assets: self.assets.clone(),
-                level: self.level.clone(),
-                enterprise,
-            }));
+            return SimpleTrans::Switch(Box::new(MenuState::end_level(
+                self.assets.clone(),
+                Some(enterprise),
+            )));
         }
         SimpleTrans::None
     }

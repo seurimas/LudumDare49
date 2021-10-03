@@ -1,0 +1,26 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 250,
+    asteroids: [Field(
+        normal: 800,
+        bombs: 80,
+        gases: 400,
+    )],
+    modified_prices: {
+        Big: 5.,
+        Bomb: 0.5,
+    },
+    billboards: [],
+    card: (
+        title: "Striking Out!",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Striking Out!",
+        description: "There is no reward, return home whenever.",
+        shown_prices: [Big, Medium, Bomb, Water, Hydrogen],
+    ),
+)

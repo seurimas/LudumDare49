@@ -91,7 +91,13 @@ impl Enterprise {
     }
 
     pub fn get_next_levels(&self, levels: Vec<(Level, LevelHandle)>) -> Vec<(Level, LevelHandle)> {
-        if self.last_completions.len() == 1 {
+        if self.last_completions.len() == 0 {
+            levels
+                .iter()
+                .filter(|(level, handle)| level.reference.name == "Tutorial")
+                .cloned()
+                .collect()
+        } else if self.last_completions.len() == 1 {
             levels
                 .iter()
                 .filter(|(level, handle)| level.reference.name != "Tutorial")

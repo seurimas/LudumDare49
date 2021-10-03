@@ -1,3 +1,8 @@
+use std::{
+    fs::File,
+    io::{BufWriter, Write},
+};
+
 use amethyst::{
     assets::AssetStorage,
     core::{HiddenPropagate, Parent},
@@ -131,6 +136,14 @@ impl SimpleState for MenuState {
         data.world.delete_all();
         if let Some(enterprise) = &self.enterprise {
             data.world.insert(enterprise.clone());
+            if let Ok(mut file) = File::create("enterprise.ron") {
+                if let Ok(save) = ron::ser::to_string(enterprise) {
+                    println!("Saving");
+                    file.write(save.as_bytes());
+                }
+            } else {
+                println!("Could not save...");
+            }
         }
         data.world.exec(|mut creator: UiCreator<'_>| {
             println!("Creating menu...");
@@ -210,6 +223,11 @@ impl SimpleState for MenuState {
                                                     levels.push((level.clone(), handle.clone()));
                                                 }
                                             }
+                                            levels = self
+                                                .enterprise
+                                                .as_ref()
+                                                .unwrap_or(&Enterprise::begin_enterprise())
+                                                .get_next_levels(levels);
                                             return Trans::Push(Box::new(MenuState::level_menu(
                                                 self.assets.clone(),
                                                 levels,

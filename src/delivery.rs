@@ -32,7 +32,7 @@ pub enum DeliveryCorner {
 #[storage(VecStorage)]
 pub struct DeliveryZone {
     cooldown: Option<f32>,
-    jumping: bool,
+    pub jumping: bool,
     arrow_distance: f32,
     size: (f32, f32),
     corners: Vec<Entity>,
@@ -41,6 +41,9 @@ pub struct DeliveryZone {
 impl DeliveryZone {
     pub fn jumped(&self) -> bool {
         self.jumping && self.cooldown.is_none()
+    }
+    pub fn jump_started(&self) -> bool {
+        self.jumping && self.cooldown.unwrap_or_default() >= 7.9
     }
 }
 

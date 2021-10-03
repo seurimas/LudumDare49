@@ -1,4 +1,4 @@
-#[allow(warning)]
+#![allow(warnings)]
 #[macro_use]
 extern crate serde;
 use std::{
@@ -36,7 +36,10 @@ use physics::{PhysicsBundle, PhysicsHandle};
 use player::{initialize_player, PlayerBundle};
 use serde::Deserialize;
 
-use crate::delivery::generate_delivery_zone;
+use crate::{
+    delivery::generate_delivery_zone,
+    menu::{CardDesc, MenuState, MenuTransition},
+};
 mod assets;
 mod asteroid;
 mod billboards;
@@ -44,6 +47,7 @@ mod delivery;
 mod economy;
 mod explosions;
 mod level;
+mod menu;
 mod particles;
 mod physics;
 mod player;
@@ -64,7 +68,7 @@ impl SimpleState for GameplayState {
         data.world.insert(self.enterprise.clone());
         initialize_level(data.world, &self.level);
         data.world.exec(|mut creator: UiCreator<'_>| {
-            creator.create("hud.ron", ());
+            creator.create("ui/hud.ron", ());
         });
     }
 
@@ -125,55 +129,6 @@ impl SimpleState for GameplayState {
     }
 }
 
-struct MenuState {
-    assets: ASSETS,
-    menu: &'static str,
-}
-impl SimpleState for MenuState {
-    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
-        data.world.delete_all();
-        data.world.exec(|mut creator: UiCreator<'_>| {
-            creator.create(self.menu, ());
-        });
-    }
-
-    fn handle_event(
-        &mut self,
-        data: StateData<'_, GameData<'_, '_>>,
-        event: StateEvent,
-    ) -> SimpleTrans {
-        match &event {
-            StateEvent::Window(event) => {
-                if is_close_requested(&event) {
-                    Trans::Quit
-                } else {
-                    Trans::None
-                }
-            }
-            StateEvent::Ui(ui_event) => data.world.exec(|finder: UiFinder<'_>| {
-                if ui_event.event_type == UiEventType::Click {
-                    if let Some(start) = finder.find("play") {
-                        if start == ui_event.target {
-                            return Trans::Push(Box::new(GameplayState {
-                                assets: self.assets.clone(),
-                                enterprise: Enterprise::begin_enterprise(),
-                                level: self.assets.1.levels.get(0).unwrap().clone(),
-                            }));
-                        }
-                    }
-                    if let Some(exit) = finder.find("exit") {
-                        if exit == ui_event.target {
-                            return Trans::Quit;
-                        }
-                    }
-                }
-                Trans::None
-            }),
-            _ => Trans::None,
-        }
-    }
-}
-
 #[derive(Default)]
 struct LoadingState {
     progress: Option<ProgressCounter>,
@@ -220,23 +175,36 @@ impl SimpleState for LoadingState {
         if let Some(progress) = &self.progress {
             println!("{:?}", progress);
             if progress.is_complete() {
-                // return SimpleTrans::Switch(Box::new(MenuState {
+                return SimpleTrans::Switch(Box::new(MenuState::card_menu(
+                    self.assets.clone().unwrap(),
+                    vec![
+                        (
+                            CardDesc::new("Begin Your Enterprise!", 0),
+                            MenuTransition::Begin,
+                        ),
+                        (
+                            CardDesc::new("Continue Your Enterprise!", 0),
+                            MenuTransition::Continue,
+                        ),
+                        (
+                            CardDesc::new("Retire For The Day...", 0),
+                            MenuTransition::Quit,
+                        ),
+                    ],
+                )));
+                // return SimpleTrans::Switch(Box::new(GameplayState {
                 //     assets: self.assets.clone().unwrap(),
-                //     menu: "main_menu.ron",
+                //     enterprise: Enterprise::begin_enterprise(),
+                //     level: self
+                //         .assets
+                //         .clone()
+                //         .unwrap()
+                //         .1
+                //         .levels
+                //         .get(0)
+                //         .unwrap()
+                //         .clone(),
                 // }));
-                return SimpleTrans::Switch(Box::new(GameplayState {
-                    assets: self.assets.clone().unwrap(),
-                    enterprise: Enterprise::begin_enterprise(),
-                    level: self
-                        .assets
-                        .clone()
-                        .unwrap()
-                        .1
-                        .levels
-                        .get(0)
-                        .unwrap()
-                        .clone(),
-                }));
             }
         }
         SimpleTrans::None
@@ -282,7 +250,7 @@ fn main() -> amethyst::Result<()> {
 
     let mut game = Application::new(
         assets_dir,
-        LoadingState::with_levels(Directory::new("assets"), "levels.ron")?,
+        LoadingState::with_levels(Directory::new("assets"), "levels/levels.ron")?,
         game_data,
     )?;
     game.run();

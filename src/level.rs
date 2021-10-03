@@ -21,6 +21,7 @@ use crate::{
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
+    menu::CardDesc,
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
 };
@@ -41,6 +42,7 @@ pub struct Level {
     player_start: Option<(f32, f32)>,
     deliveries: Vec<(f32, f32)>,
     pub jump_cost: u64,
+    card: CardDesc,
     asteroids: Vec<AsteroidDesc>,
     billboards: Vec<BillboardDesc>,
     modified_prices: Option<HashMap<AsteroidType, f32>>,

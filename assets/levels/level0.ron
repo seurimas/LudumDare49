@@ -1,0 +1,35 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 0,
+    asteroids: [Field(
+        normal: 800,
+        bombs: 40,
+        gases: 400,
+    )],
+    modified_prices: {
+        // Mineral
+        Big: 0.,
+        Medium: 0.,
+        Small: 0.,
+        Bitty: 0.,
+        // Explosive
+        Bomb: 0.,
+        // Reactive
+        Hydrogen: 0.,
+        Oxygen: 0.,
+        Water: 0.,
+        WaterMedium: 0.,
+        WaterBig: 0.,
+    },
+    billboards: [(
+        location: (0.0, 100.0),
+        sprite_number: 40,
+    )],
+    card: (
+        title: "Free Play",
+        sprite_number: 0,
+    ),
+)

@@ -1,0 +1,149 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "menu",
+        anchor: Middle,
+        stretch: XY( x_margin: 0.0, y_margin: 0.0, keep_aspect_ratio: false),
+        width: 100.,
+        height: 100.,
+
+        z: 2.0,
+    ),
+    background: NineSlice(
+        x_start: 464,
+        y_start: 464,
+        width: 48,
+        height: 48,
+        left_dist: 5,
+        top_dist: 5,
+        right_dist: 5,
+        bottom_dist: 5,
+        tex: File("Sprites.png", ("IMAGE", ())),
+        texture_dimensions: (512, 512),
+    ),
+    children: [
+        Container(
+            transform: (
+                id: "card_container_0",
+                anchor: BottomLeft,
+                x: .25,
+                y: .75,
+                width: .48,
+                height: .48,
+                percent: true,
+            ),
+            background: NineSlice(
+                x_start: 416,
+                y_start: 464,
+                width: 48,
+                height: 48,
+                left_dist: 5,
+                top_dist: 5,
+                right_dist: 5,
+                bottom_dist: 5,
+                tex: File("Sprites.png", ("IMAGE", ())),
+                texture_dimensions: (512, 512),
+            ),
+            children: [
+                Label(
+                    transform: (
+                        id: "card_label_0",
+                        anchor: TopMiddle,
+                        y: -24.,
+                        height: 24.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "Begin Your Enterprise!",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 24.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                )
+            ]
+        ),
+        Container(
+            transform: (
+                id: "card_container_1",
+                anchor: BottomLeft,
+                x: .75,
+                y: .75,
+                width: .48,
+                height: .48,
+                percent: true,
+            ),
+            background: NineSlice(
+                x_start: 416,
+                y_start: 464,
+                width: 48,
+                height: 48,
+                left_dist: 5,
+                top_dist: 5,
+                right_dist: 5,
+                bottom_dist: 5,
+                tex: File("Sprites.png", ("IMAGE", ())),
+                texture_dimensions: (512, 512),
+            ),
+            children: [
+                Label(
+                    transform: (
+                        id: "card_label_1",
+                        anchor: TopMiddle,
+                        y: -24.,
+                        height: 24.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "Continue Your Enterprise!",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 24.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                )
+            ]
+        ),
+        Container(
+            transform: (
+                id: "card_container_2",
+                anchor: BottomLeft,
+                x: .50,
+                y: .25,
+                width: .48,
+                height: .48,
+                percent: true,
+            ),
+            background: NineSlice(
+                x_start: 416,
+                y_start: 464,
+                width: 48,
+                height: 48,
+                left_dist: 5,
+                top_dist: 5,
+                right_dist: 5,
+                bottom_dist: 5,
+                tex: File("Sprites.png", ("IMAGE", ())),
+                texture_dimensions: (512, 512),
+            ),
+            children: [
+                Label(
+                    transform: (
+                        id: "card_label_2",
+                        anchor: TopMiddle,
+                        y: -24.,
+                        height: 24.,
+                        stretch: X( x_margin: 0. ),
+                    ),
+                    text: (
+                        text: "Retire For The Day...",
+                        font: File("font/square.ttf", ("TTF", ())),
+                        font_size: 24.,
+                        color: (0.92, 1.0, 0.0, 1.0),
+                        align: Middle,
+                    )
+                )
+            ]
+        ),
+    ]
+)

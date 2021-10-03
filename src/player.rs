@@ -1,5 +1,5 @@
 use amethyst::{
-    core::{Parent, SystemBundle, Transform},
+    core::{Parent, SystemBundle, Time, Transform},
     ecs::*,
     input::{InputHandler, StringBindings},
     prelude::*,
@@ -17,6 +17,7 @@ use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 use crate::{
     assets::SpriteStorage,
     delivery::{PlayerDeliveryArrowSystem, PlayerDeliverySystem, PlayerJumpSystem},
+    economy::Enterprise,
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     tractor::{PlayerTractorSystem, TractorGravitySystem},
 };
@@ -86,10 +87,15 @@ impl<'s> System<'s> for PlayerMovementSystem {
         ReadStorage<'s, PhysicsHandle>,
         WriteStorage<'s, Player>,
         Entities<'s>,
+        Write<'s, Enterprise>,
+        Read<'s, Time>,
         Read<'s, FpsCounter>,
     );
 
-    fn run(&mut self, (input, mut physics, handles, mut player, entities, fps): Self::SystemData) {
+    fn run(
+        &mut self,
+        (input, mut physics, handles, mut player, entities, mut enterprise, time, fps): Self::SystemData,
+    ) {
         let x_tilt = input.axis_value("leftright");
         let y_tilt = input.axis_value("updown");
         let boost = input.action_is_down("boost").unwrap_or(false);
@@ -99,6 +105,11 @@ impl<'s> System<'s> for PlayerMovementSystem {
                 if player.state != PlayerState::Active {
                     return;
                 }
+                let mut burn_rate = 0.05 * y_tilt.abs() as f64;
+                if boost {
+                    burn_rate *= 2.0;
+                }
+                enterprise.eat_fuel(burn_rate, &time);
                 let position = physics.get_position(handle).unwrap();
                 let speed = if boost { 200_000.0 } else { 100_000.0 };
                 physics.apply_force(

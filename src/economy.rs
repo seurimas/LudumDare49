@@ -47,6 +47,10 @@ impl Enterprise {
         self.funds += (mass * ppm) as u64;
     }
 
+    pub fn eat_fuel(&mut self, rate: f64, time: &Time) {
+        self.fuel -= rate * (time.delta_seconds() as f64);
+    }
+
     pub fn try_jump(&mut self, level: &Level) -> bool {
         if !self.can_jump(level) {
             self.tried_jump = Some(3.5);

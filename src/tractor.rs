@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use amethyst::{
     core::{
         math::{Point3, Translation3, UnitQuaternion, Vector2, Vector3},
-        Transform,
+        Time, Transform,
     },
     ecs::*,
     input::{InputHandler, StringBindings},
@@ -19,6 +19,7 @@ use amethyst::{
 use crate::{
     assets::{SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::Asteroid,
+    economy::Enterprise,
     particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
 };
@@ -69,12 +70,25 @@ impl<'s> System<'s> for PlayerTractorSystem {
         ReadStorage<'s, Camera>,
         Option<Read<'s, ScreenDimensions>>,
         WriteStorage<'s, Transform>,
+        Write<'s, Enterprise>,
+        Read<'s, Time>,
         Entities<'s>,
     );
 
     fn run(
         &mut self,
-        (input, mut tractors, sprites, update, cameras, dimensions, mut transforms, entities): Self::SystemData,
+        (
+            input,
+            mut tractors,
+            sprites,
+            update,
+            cameras,
+            dimensions,
+            mut transforms,
+            mut enterprise,
+            time,
+            entities,
+        ): Self::SystemData,
     ) {
         let location = {
             if let Some((transform, camera)) = (&transforms, &cameras).join().next() {
@@ -94,6 +108,7 @@ impl<'s> System<'s> for PlayerTractorSystem {
         if let Some((tractor, entity)) = (&mut tractors, &entities).join().next() {
             let entity = entity.clone();
             if input.mouse_button_is_down(MouseButton::Left) {
+                enterprise.eat_fuel(0.5, &time);
                 if let Some(location) = location {
                     move_tractor(entity, tractor, &mut transforms, location);
                 }
@@ -110,6 +125,7 @@ impl<'s> System<'s> for PlayerTractorSystem {
                 tractor.attenuation += attenuation_change;
             }
         } else if input.mouse_button_is_down(MouseButton::Left) {
+            enterprise.eat_fuel(0.05, &time);
             if let Some(location) = location {
                 init_tractor(
                     update.create_entity(&entities),

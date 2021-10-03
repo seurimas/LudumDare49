@@ -2,11 +2,11 @@ use amethyst::{
     assets::{AssetStorage, Directory, Format, Handle, Loader, ProgressCounter, RonFormat, Source},
     audio::{
         output::{init_output, Output},
-        SourceHandle, WavFormat,
+        Mp3Format, SourceHandle, WavFormat,
     },
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, ImageFormat, SpriteSheet, SpriteSheetFormat, Texture},
-    shred::{Read, ResourceId, SystemData, World},
+    shred::{Read, ResourceId, System, SystemData, World},
     Error,
 };
 use serde::Deserialize;
@@ -27,7 +27,7 @@ where
     N: Into<String>,
 {
     let loader = world.read_resource::<Loader>();
-    loader.load(path, WavFormat, progress, &world.read_resource())
+    loader.load(path, Mp3Format, progress, &world.read_resource())
 }
 
 pub fn load_texture<'a, N>(
@@ -151,10 +151,14 @@ impl SimpleState for LoadingState {
             .iter()
             .map(|path| load_level(data.world, path.to_string(), &mut progress_counter))
             .collect();
-        // let main_theme = load_sound_file(data.world, "MainTheme.wav", &mut progress_counter);
+        let main_theme = load_sound_file(data.world, "audio/SpaceTheme.mp3", &mut progress_counter);
 
         self.progress = Some(progress_counter);
-        self.assets = Some((SpriteStorage { sprites }, LevelStorage { levels }));
+        self.assets = Some((
+            SpriteStorage { sprites },
+            LevelStorage { levels },
+            SoundStorage { main_theme },
+        ));
     }
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
@@ -182,5 +186,22 @@ impl SimpleState for LoadingState {
             }
         }
         SimpleTrans::None
+    }
+}
+
+pub struct DjSystem;
+
+impl<'a> System<'a> for DjSystem {
+    type SystemData = (
+        Option<Read<'a, amethyst::audio::AudioSink>>,
+        SoundPlayer<'a>,
+    );
+
+    fn run(&mut self, (sink, player): Self::SystemData) {
+        if let Some(ref sink) = sink {
+            if sink.empty() {
+                player.play_main_theme(sink);
+            }
+        }
     }
 }

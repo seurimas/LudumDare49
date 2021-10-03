@@ -8,7 +8,7 @@ use std::{
 
 use amethyst::{
     assets::{AssetStorage, Directory, Processor, ProgressCounter, Source},
-    audio::output::init_output,
+    audio::{output::init_output, AudioBundle},
     core::{HideHierarchySystem, HideHierarchySystemDesc, Transform, TransformBundle},
     ecs::*,
     input::is_close_requested,
@@ -24,8 +24,8 @@ use amethyst::{
     Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
 };
 use assets::{
-    load_level, load_sound_file, load_spritesheet, LevelStorage, LoadingState, SoundStorage,
-    SpriteStorage,
+    load_level, load_sound_file, load_spritesheet, DjSystem, LevelStorage, LoadingState,
+    SoundStorage, SpriteStorage,
 };
 use asteroid::{generate_asteroid, generate_asteroid_field, AsteroidBundle, AsteroidType};
 use billboards::BillboardBundle;
@@ -54,7 +54,7 @@ mod physics;
 mod player;
 mod tractor;
 
-type ASSETS = (SpriteStorage, LevelStorage);
+type ASSETS = (SpriteStorage, LevelStorage, SoundStorage);
 
 struct GameplayState {
     assets: ASSETS,
@@ -66,6 +66,7 @@ impl SimpleState for GameplayState {
         data.world.delete_all();
         data.world.insert(self.assets.0.clone());
         data.world.insert(self.assets.1.clone());
+        data.world.insert(self.assets.2.clone());
         data.world.insert(self.enterprise.clone());
         initialize_level(data.world, &self.level);
         data.world.exec(|mut creator: UiCreator<'_>| {
@@ -141,6 +142,7 @@ fn main() -> amethyst::Result<()> {
 
     let game_data = GameDataBuilder::default()
         .with(Processor::<Level>::new(), "level_loader", &[])
+        .with(DjSystem, "dj", &[])
         .with_bundle(TransformBundle::new())?
         .with_system_desc(HideHierarchySystemDesc, "hide_hieracry", &[])
         .with_bundle(
@@ -157,6 +159,7 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderDebugLines::default())
                 .with_plugin(RenderUi::default()),
         )?
+        .with_bundle(AudioBundle::default())?
         .with_bundle(PhysicsBundle)?
         .with_bundle(AsteroidBundle)?
         .with_bundle(EconomyBundle)?

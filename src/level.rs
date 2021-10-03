@@ -25,6 +25,7 @@ use crate::{
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
     economy::Enterprise,
     menu::{find_by_id, CardDesc},
+    particles::random_direction,
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
 };
@@ -90,10 +91,10 @@ pub struct Boundaries {
 pub fn generate_boundaries(world: &mut World, size: (f32, f32)) {
     let body = RigidBodyDesc::new().status(BodyStatus::Static);
 
-    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0 / 2.0, size.1)));
+    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(100.0, size.1)));
     let collider = ColliderDesc::new(shape).sensor(true);
     let mut transform = Transform::default();
-    transform.set_translation(Vector3::new(size.0 * 1.05, 0.0, 0.0));
+    transform.set_translation(Vector3::new(size.0 * 1.25, 0.0, 0.0));
     world
         .create_entity()
         .with(PhysicsDesc::new(body.clone(), collider))
@@ -104,10 +105,10 @@ pub fn generate_boundaries(world: &mut World, size: (f32, f32)) {
         })
         .build();
 
-    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0 / 2.0, size.1)));
+    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(100.0, size.1)));
     let collider = ColliderDesc::new(shape).sensor(true);
     let mut transform = Transform::default();
-    transform.set_translation(Vector3::new(size.0 * -1.05, 0.0, 0.0));
+    transform.set_translation(Vector3::new(size.0 * -1.25, 0.0, 0.0));
     world
         .create_entity()
         .with(PhysicsDesc::new(body.clone(), collider))
@@ -118,10 +119,10 @@ pub fn generate_boundaries(world: &mut World, size: (f32, f32)) {
         })
         .build();
 
-    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0, size.1 / 2.0)));
+    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0, 100.0)));
     let collider = ColliderDesc::new(shape).sensor(true);
     let mut transform = Transform::default();
-    transform.set_translation(Vector3::new(0.0, size.1 * 1.05, 0.0));
+    transform.set_translation(Vector3::new(0.0, size.1 * 1.25, 0.0));
     world
         .create_entity()
         .with(PhysicsDesc::new(body.clone(), collider))
@@ -132,10 +133,10 @@ pub fn generate_boundaries(world: &mut World, size: (f32, f32)) {
         })
         .build();
 
-    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0, size.1 / 2.0)));
+    let shape = ShapeHandle::new(Cuboid::new(Vector2::new(size.0, 100.0)));
     let collider = ColliderDesc::new(shape).sensor(true);
     let mut transform = Transform::default();
-    transform.set_translation(Vector3::new(0.0, size.1 * -1.05, 0.0));
+    transform.set_translation(Vector3::new(0.0, size.1 * -1.250, 0.0));
     world
         .create_entity()
         .with(PhysicsDesc::new(body.clone(), collider))
@@ -218,46 +219,19 @@ fn reintroduce(
     handle: &PhysicsHandle,
     asteroid: Entity,
 ) {
-    let (x, y, vx, vy) = if rand::random() {
-        // Top/Bottom
-        if rand::random() {
-            (
-                rand::random::<f32>() * boundary.width - (boundary.width / 2.0),
-                boundary.height / 2.0,
-                rand::random::<f32>(),
-                -rand::random::<f32>(),
-            )
-        } else {
-            (
-                rand::random::<f32>() * boundary.width - (boundary.width / 2.0),
-                -boundary.height / 2.0,
-                rand::random::<f32>(),
-                rand::random::<f32>(),
-            )
-        }
-    } else {
-        // Left/Right
-        if rand::random() {
-            (
-                -boundary.width / 2.0,
-                rand::random::<f32>() * boundary.height - (boundary.height / 2.0),
-                rand::random::<f32>(),
-                rand::random::<f32>(),
-            )
-        } else {
-            (
-                boundary.width / 2.0,
-                rand::random::<f32>() * boundary.height - (boundary.height / 2.0),
-                -rand::random::<f32>(),
-                rand::random::<f32>(),
-            )
-        }
-    };
+    let mut outer = random_direction();
+    outer /= outer.x.min(outer.y);
+    outer.x *= boundary.width;
+    outer.y *= boundary.height;
+    let (x, y, vx, vy) = (
+        outer.x,
+        outer.y,
+        rand::random::<f32>() * -outer.x.signum(),
+        rand::random::<f32>() * -outer.y.signum(),
+    );
     physics.set_location(&handle, x, y);
-    let current_speed = physics.get_velocity(&handle).unwrap().magnitude();
-    if current_speed > 0.0 {
-        physics.set_velocity(&handle, Vector2::new(vx, vy).normalize() * current_speed);
-    }
+    let current_speed = physics.get_velocity(&handle).unwrap().magnitude().min(10.0);
+    physics.set_velocity(&handle, Vector2::new(vx, vy).normalize() * current_speed);
 }
 
 struct DummySystem;
@@ -399,7 +373,7 @@ impl<'s> System<'s> for ReferenceCardSystem {
                                 find_by_id(&entities, &transforms, &price_id),
                             ) {
                                 if let Some(asteroid) = level.reference.shown_prices.get(idx) {
-                                    let price = level.get_ppm(*asteroid);
+                                    let price = level.get_ppm(*asteroid).clamp(0.0, 7.0);
                                     if let Some(asteroid_image) = images.get_mut(asteroid_ref) {
                                         *asteroid_image = UiImage::Sprite(SpriteRender::new(
                                             sprites.get_handle(),

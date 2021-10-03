@@ -10,8 +10,6 @@ Level(
         gases: 400,
     )],
     modified_prices: {
-        Big: 5.,
-        Bomb: 0.5,
     },
     billboards: [],
     card: (
@@ -20,7 +18,7 @@ Level(
     ),
     reference: (
         name: "Striking Out!",
-        description: "There is no reward, return home whenever.",
+        description: "Earn enough to cover the jump cost and fuel!",
         shown_prices: [Big, Medium, Bomb, Water, Hydrogen],
     ),
 )

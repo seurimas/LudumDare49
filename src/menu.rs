@@ -138,15 +138,12 @@ impl SimpleState for MenuState {
             data.world.insert(enterprise.clone());
             if let Ok(mut file) = File::create("enterprise.ron") {
                 if let Ok(save) = ron::ser::to_string(enterprise) {
-                    println!("Saving");
                     file.write(save.as_bytes());
                 }
             } else {
-                println!("Could not save...");
             }
         }
         data.world.exec(|mut creator: UiCreator<'_>| {
-            println!("Creating menu...");
             let main_menu = creator.create(self.menu, ());
         });
     }

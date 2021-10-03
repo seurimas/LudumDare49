@@ -18,7 +18,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Enterprise {
-    fuel: f64,
+    pub fuel: f64,
     funds: u64,
     loans: i32,
     bankruptcies: usize,

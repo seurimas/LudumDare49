@@ -8,7 +8,7 @@ Level(
         normal: 800,
         bombs: 80,
         gases: 400,
-        artifacts: 3,
+        artifacts: 5,
     )],
     modified_prices: {
     },

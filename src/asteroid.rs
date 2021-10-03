@@ -140,7 +140,7 @@ impl AsteroidType {
             AsteroidType::Oxygen => 1.5,
             AsteroidType::ShipPieceTarnished(_) => 0.1,
             AsteroidType::EncasedArtifact => 0.5,
-            AsteroidType::Artifact => 6.0,
+            AsteroidType::Artifact => 600.0,
             _ => 1.0,
         }
     }

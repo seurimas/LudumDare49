@@ -91,7 +91,6 @@ impl<'s> System<'s> for ExplosionForceSystem {
             {
                 let location = transform.translation();
                 let particle_count = ((rand::random::<f32>() * 20.0) as usize + 10);
-                println!("{}", particle_count);
                 for _ in 0..particle_count {
                     let direction = random_direction();
                     emit_particle(

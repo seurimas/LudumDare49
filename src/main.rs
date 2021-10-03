@@ -21,7 +21,8 @@ use amethyst::{
     ui::{RenderUi, UiBundle, UiCreator, UiEventType, UiFinder},
     utils::{application_root_dir, fps_counter::FpsCounterBundle},
     winit::{dpi::LogicalSize, Event, WindowEvent},
-    Application, GameData, GameDataBuilder, SimpleState, SimpleTrans, StateData, StateEvent, Trans,
+    Application, GameData, GameDataBuilder, LogLevelFilter, LoggerConfig, SimpleState, SimpleTrans,
+    StateData, StateEvent, StdoutLog, Trans,
 };
 use assets::{
     load_level, load_sound_file, load_spritesheet, DjSystem, LevelStorage, LoadingState,
@@ -114,14 +115,18 @@ impl SimpleState for GameplayState {
         //         menu: "game_over.ron",
         //     }));
         // }
+        let mut enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
         if data.world.exec(|deliveries: ReadStorage<DeliveryZone>| {
             (&deliveries)
                 .join()
                 .find(|delivery| delivery.jumped())
                 .is_some()
-        }) {
-            let mut enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
-            enterprise.refuel();
+        }) || enterprise.fuel <= 0.0
+        {
+            let mut level = { data.world.read_resource::<Level>().deref().clone() };
+            if level.reference.name != "Tutorial" {
+                enterprise.refuel();
+            }
             return SimpleTrans::Switch(Box::new(MenuState::end_level(
                 self.assets.clone(),
                 Some(enterprise),
@@ -132,7 +137,11 @@ impl SimpleState for GameplayState {
 }
 
 fn main() -> amethyst::Result<()> {
-    amethyst::start_logger(Default::default());
+    let mut logger_config = LoggerConfig::default();
+    logger_config.stdout = StdoutLog::Off;
+    logger_config.log_file = Some("err.log".into());
+    logger_config.level_filter = LogLevelFilter::Warn;
+    amethyst::start_logger(logger_config);
 
     let app_root = application_root_dir()?;
 

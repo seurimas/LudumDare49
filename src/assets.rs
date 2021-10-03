@@ -129,8 +129,10 @@ impl<'a> SoundPlayer<'a> {
     pub fn play_jumping_theme(&self, output: &Output, sink: &amethyst::audio::AudioSink) {
         if let Some(ref sounds) = self.storage.as_ref() {
             if let Some(sound) = self.sources.get(&sounds.jump_theme.clone()) {
-                sink.pause();
-                output.play_once(sound, 1.0);
+                if !sink.is_paused() {
+                    sink.pause();
+                    output.play_once(sound, 0.5);
+                }
             }
         }
     }
@@ -189,7 +191,6 @@ impl SimpleState for LoadingState {
 
     fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
         if let Some(progress) = &self.progress {
-            println!("{:?}", progress);
             if progress.is_complete() {
                 let enterprise: Option<Enterprise> = {
                     if let Ok(mut file) = File::open("enterprise.ron") {

@@ -1,19 +1,19 @@
 #![enable(implicit_some)]
 Level(
-    boundaries: (6000.0, 6000.0),
+    boundaries: (3000.0, 3000.0),
     player_state: (0.0, 0.0),
     deliveries: [(0.0, 0.0)],
     jump_cost: 2000,
     asteroids: [Field(
         normal: 100,
         bombs: 20,
-        gases: 200,
+        gases: 600,
         sulphur: 100,
         debris: (5, 1.)
     ), Field(
-        location: (1000.0, 2000.0, 800.0, 800.0),
+        location: (800.0, 800.0, 800.0, 800.0),
         bombs: 10,
-        gases: 300,
+        gases: 100,
         sulphur: 200,
         debris: (100, 0.9)
     )],

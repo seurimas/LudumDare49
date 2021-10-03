@@ -108,7 +108,7 @@ Container(
             transform: (
                 id: "card_container_2",
                 anchor: BottomLeft,
-                x: .86666,
+                x: .83333,
                 y: .75,
                 width: .30,
                 height: .48,
@@ -231,7 +231,7 @@ Container(
             transform: (
                 id: "card_container_5",
                 anchor: BottomLeft,
-                x: .86666,
+                x: .83333,
                 y: .25,
                 width: .30,
                 height: .48,

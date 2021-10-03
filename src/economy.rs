@@ -35,7 +35,7 @@ impl Enterprise {
     pub fn begin_enterprise() -> Self {
         Enterprise {
             fuel: 100.0,
-            funds: 1_000,
+            funds: 0,
             bankruptcies: 0,
             tried_jump: None,
             last_completions: Vec::new(),

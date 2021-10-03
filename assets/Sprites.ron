@@ -196,10 +196,10 @@ List((
     ),
   /* 30: Insufficient Funds */
     (
-      x: 48,
-      y: 35,
+      x: 216,
+      y: 0,
       height: 22,
-      width: 112,
+      width: 95,
     ),
   /* 31/32: Sufficient Funds + Arrow */
     (
@@ -253,54 +253,61 @@ List((
       width: 17,
     ),
   /* 39-46: Billboards */
-    // Unused
-    (
-      x: 0,
-      y: 42,
-      height: 13,
-      width: 13,
-    ),
+    // 39 MOVE
     (
       x: 120,
-      y: 0,
-      height: 8,
-      width: 26,
+      y: 8,
+      height: 10,
+      width: 25,
     ),
-    (
-      x: 0,
-      y: 42,
-      height: 13,
-      width: 13,
-    ),
+    // 40 With
     (
       x: 120,
+      y: 17,
+      height: 7,
+      width: 17,
+    ),
+    // 41 WASD
+    (
+      x: 146,
+      y: 0,
+      height: 16,
+      width: 21,
+    ),
+    // 42 Space
+    (
+      x: 168,
       y: 0,
       height: 8,
-      width: 26,
+      width: 31,
     ),
+    // 43 Q
     (
-      x: 0,
-      y: 42,
-      height: 13,
-      width: 13,
-    ),
-    (
-      x: 120,
-      y: 0,
+      x: 146,
+      y: 16,
       height: 8,
-      width: 26,
+      width: 7,
     ),
+    // 44 +
     (
-      x: 0,
-      y: 42,
-      height: 13,
-      width: 13,
-    ),
-    (
-      x: 120,
-      y: 0,
+      x: 153,
+      y: 16,
       height: 8,
-      width: 26,
+      width: 7,
+    ),
+    // 45 Target
+    (
+      x: 160,
+      y: 16,
+      height: 8,
+      width: 7,
+    ),
+    // 46 Tractor
+    (
+      x: 168,
+      y: 16,
+      height: 10,
+      width: 43,
     ),
   /* 47-52: Particles */
     (
@@ -440,30 +447,60 @@ List((
       height: 9,
       width: 9,
     ),
-    // Unused
+    // 69/70: Encased/Excavated Gold
     (
       x: 0,
-      y: 42,
-      height: 13,
-      width: 13,
-    ),
-    (
-      x: 0,
-      y: 55,
+      y: 111,
       height: 17,
       width: 17,
     ),
     (
       x: 0,
-      y: 42,
+      y: 128,
       height: 13,
       width: 13,
     ),
+    // 71: Deliver
     (
-      x: 0,
-      y: 55,
+      x: 168,
+      y: 26,
+      height: 10,
+      width: 43,
+    ),
+    // 72: Jump
+    (
+      x: 168,
+      y: 36,
       height: 17,
-      width: 17,
+      width: 25,
+    ),
+    // 73: Watch
+    (
+      x: 120,
+      y: 0,
+      height: 7,
+      width: 24,
+    ),
+    // 74: Fuel
+    (
+      x: 152,
+      y: 24,
+      height: 10,
+      width: 10,
+    ),
+    // 75: Mouse
+    (
+      x: 168,
+      y: 8,
+      height: 8,
+      width: 6,
+    ),
+    // 76: Level Info
+    (
+      x: 408,
+      y: 464,
+      height: 48,
+      width: 8,
     ),
   ],
 ))

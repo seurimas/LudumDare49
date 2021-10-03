@@ -43,6 +43,9 @@ pub enum AsteroidType {
     // Ship Pieces
     ShipPiece(usize),
     ShipPieceTarnished(usize),
+    // Gold
+    EncasedArtifact,
+    Artifact,
 }
 
 #[derive(Component, Debug)]
@@ -71,8 +74,12 @@ impl AsteroidType {
             AsteroidType::Acid => 53,
             AsteroidType::AcidMedium => 54,
             AsteroidType::AcidBig => 55,
+            // Ship
             AsteroidType::ShipPiece(idx) => 56 + idx,
             AsteroidType::ShipPieceTarnished(idx) => 62 + idx,
+            // Artifact
+            AsteroidType::EncasedArtifact => 69,
+            AsteroidType::Artifact => 70,
         }
     }
     pub fn get_radius(&self) -> f32 {
@@ -93,6 +100,9 @@ impl AsteroidType {
             AsteroidType::WaterBig | AsteroidType::AcidBig => 8.0,
             // Ship
             AsteroidType::ShipPiece(_) | AsteroidType::ShipPieceTarnished(_) => 4.0,
+            // Artifact
+            AsteroidType::EncasedArtifact => 8.0,
+            AsteroidType::Artifact => 6.0,
         }
     }
     pub fn get_mass(&self) -> f32 {
@@ -116,6 +126,9 @@ impl AsteroidType {
             AsteroidType::AcidBig => 36.0,
             // Ship Pieces
             AsteroidType::ShipPiece(_) | AsteroidType::ShipPieceTarnished(_) => 80.0,
+            // Artifact
+            AsteroidType::EncasedArtifact => 80.0,
+            AsteroidType::Artifact => 70.0,
         }
     }
     pub fn get_base_ppm(&self) -> f32 {
@@ -126,6 +139,8 @@ impl AsteroidType {
             AsteroidType::Hydrogen => 1.5,
             AsteroidType::Oxygen => 1.5,
             AsteroidType::ShipPieceTarnished(_) => 0.1,
+            AsteroidType::EncasedArtifact => 0.5,
+            AsteroidType::Artifact => 6.0,
             _ => 1.0,
         }
     }

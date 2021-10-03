@@ -1,8 +1,8 @@
 #![enable(implicit_some)]
 Level(
-    boundaries: (500.0, 4000.0),
-    player_state: (0.0, -2000.0),
-    deliveries: [(0.0, 2000.0)],
+    boundaries: (500.0, 2000.0),
+    player_start: (0.0, -1000.0),
+    deliveries: [(0.0, 1000.0)],
     jump_cost: 100,
     asteroids: [Field(
         normal: 80,
@@ -10,7 +10,94 @@ Level(
         gases: 20,
     )],
     modified_prices: {},
-    billboards: [],
+    billboards: [(
+        location: (50., -950.),
+        sprite_number: 39,
+    ), (
+        location: (50., -975.),
+        sprite_number: 40,
+    ), (
+        location: (50., -1000.),
+        sprite_number: 41,
+    ), (
+        location: (50., -1025.),
+        sprite_number: 44,
+    ), (
+        location: (50., -1050.),
+        sprite_number: 42,
+    ), (
+        location: (0, -900.),
+        sprite_number: 45,
+    ), (
+        location: (50, -700.),
+        sprite_number: 73,
+    ), (
+        location: (67, -700.),
+        sprite_number: 74,
+    ), (
+        location: (0, -500.),
+        sprite_number: 45,
+    ), (
+        location: (50, -300.),
+        sprite_number: 75,
+    ), (
+        location: (50, -275.),
+        sprite_number: 40,
+    ), (
+        location: (50, -250.),
+        sprite_number: 46,
+    ), (
+        location: (0, -300.),
+        sprite_number: 45,
+    ), (
+        location: (0, -100.),
+        sprite_number: 45,
+    ), (
+        location: (50, 0.),
+        sprite_number: 73,
+    ), (
+        location: (67, 0.),
+        sprite_number: 76,
+    ), (
+        location: (0, 100.),
+        sprite_number: 45,
+    ), (
+        location: (0, 300.),
+        sprite_number: 45,
+    ), (
+        location: (0, 500.),
+        sprite_number: 45,
+    ), (
+        location: (0, 700.),
+        sprite_number: 45,
+    ), (
+        location: (-30, 1000.),
+        sprite_number: 26,
+    ), (
+        location: (30, 1000.),
+        sprite_number: 26,
+    ), (
+        location: (0, 1000.),
+        sprite_number: 71,
+    ), (
+        location: (0, 975.),
+        sprite_number: 44,
+    ), (
+        location: (-20, 950.),
+        sprite_number: 31,
+    ), (
+        location: (20, 950.),
+        sprite_number: 31,
+    ), (
+        location: (0, 950.),
+        sprite_number: 72,
+    ), (
+        location: (0, 925.),
+        sprite_number: 40,
+    ), (
+        location: (0, 900.),
+        sprite_number: 43,
+    )],
     card: (
         title: "Tutorial",
         sprite_number: 0,

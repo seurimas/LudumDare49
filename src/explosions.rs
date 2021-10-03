@@ -117,6 +117,19 @@ impl<'s> System<'s> for ExplosionForceSystem {
                                     asteroid.my_type = AsteroidType::Bitty;
                                     changed_size = true;
                                 }
+                                AsteroidType::EncasedArtifact => {
+                                    asteroid.my_type = AsteroidType::Artifact;
+                                    for _ in 0..10 {
+                                        let direction = random_direction();
+                                        emit_particle(
+                                            update.create_entity(&entities),
+                                            sprites.get_handle(),
+                                            Particle::explosion(&vec![33], direction),
+                                            Point2::new(asteroid_location.x, asteroid_location.y),
+                                        );
+                                    }
+                                    changed_size = true;
+                                }
                                 AsteroidType::Bitty => {
                                     entities.delete(entity);
                                 }

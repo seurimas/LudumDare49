@@ -5,6 +5,7 @@ use amethyst::{
     core::{math::Vector3, HiddenPropagate, SystemBundle, Transform},
     ecs::*,
     prelude::*,
+    renderer::SpriteRender,
     shrev::EventChannel,
     ui::{UiButtonAction, UiEvent, UiEventType, UiImage, UiText, UiTransform},
     Error,
@@ -18,7 +19,7 @@ use ncollide2d::{
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    assets::{LevelStorage, SpriteRes, SpriteStorage},
+    assets::{LevelStorage, SpriteHandles, SpriteRes, SpriteStorage},
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
@@ -313,7 +314,7 @@ impl<'s> System<'s> for AsteroidReintroductionSystem {
 fn find_by_id<'s>(
     entities: &Entities<'s>,
     transforms: &WriteStorage<'s, UiTransform>,
-    id: &'static str,
+    id: &str,
 ) -> Option<Entity> {
     (entities, transforms)
         .join()
@@ -347,7 +348,7 @@ impl<'s> System<'s> for ReferenceCardSystem {
 
     fn run(
         &mut self,
-        (events, transforms, mut images, mut texts, mut hiddens, entities, level, sprites): Self::SystemData,
+        (events, mut transforms, mut images, mut texts, mut hiddens, entities, level, sprites): Self::SystemData,
     ) {
         if let Some(reader) = &mut self.reader {
             for event in events.read(reader) {
@@ -378,6 +379,48 @@ impl<'s> System<'s> for ReferenceCardSystem {
                             }
                             if let Some(level_description) = texts.get_mut(level_description) {
                                 level_description.text = level.reference.description.clone();
+                            }
+                        }
+                        for idx in 0..6 {
+                            let asteroid_id = format!("price_reference_{}_asteroid", idx);
+                            let price_id = format!("price_reference_{}_price", idx);
+                            if let (Some(asteroid_ref), Some(price_ref)) = (
+                                find_by_id(&entities, &transforms, &asteroid_id),
+                                find_by_id(&entities, &transforms, &price_id),
+                            ) {
+                                if let Some(asteroid) = level.reference.shown_prices.get(idx) {
+                                    let price = level.get_ppm(*asteroid);
+                                    if let Some(asteroid_image) = images.get_mut(asteroid_ref) {
+                                        *asteroid_image = UiImage::Sprite(SpriteRender::new(
+                                            sprites.get_handle(),
+                                            asteroid.get_sprite_num(),
+                                        ));
+                                    }
+                                    if let (Some(price_image), Some(price_transform)) =
+                                        (images.get_mut(price_ref), transforms.get_mut(price_ref))
+                                    {
+                                        if let UiImage::PartialTexture {
+                                            tex,
+                                            left,
+                                            top,
+                                            bottom,
+                                            ..
+                                        } = price_image
+                                        {
+                                            *price_image = UiImage::PartialTexture {
+                                                tex: tex.clone(),
+                                                left: *left,
+                                                top: *top,
+                                                bottom: *bottom,
+                                                right: *left + ((8.0 / 512.0) * price),
+                                            };
+                                        }
+                                        price_transform.width = price * 24.0;
+                                    }
+                                } else {
+                                    hiddens.insert(asteroid_ref, HiddenPropagate::new());
+                                    hiddens.insert(price_ref, HiddenPropagate::new());
+                                }
                             }
                         }
                     }

@@ -1,6 +1,6 @@
 #![enable(implicit_some)]
 Level(
-    boundaries: (4000.0, 4000.0),
+    boundaries: (6000.0, 6000.0),
     player_state: (0.0, 0.0),
     deliveries: [(0.0, 0.0)],
     jump_cost: 2000,
@@ -30,6 +30,18 @@ Level(
         debris: (10, 0.5)
     ), Field(
         location: (-2000.0, 1000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    ), Field(
+        location: (-200.0, 2000.0, 200.0, 200.0),
+        bombs: 10,
+        gases: 20,
+        sulphur: 10,
+        debris: (10, 0.5)
+    ), Field(
+        location: (200.0, -2000.0, 200.0, 200.0),
         bombs: 10,
         gases: 20,
         sulphur: 10,

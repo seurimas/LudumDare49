@@ -129,6 +129,9 @@ impl MenuState {
 impl SimpleState for MenuState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         data.world.delete_all();
+        if let Some(enterprise) = &self.enterprise {
+            data.world.insert(enterprise.clone());
+        }
         data.world.exec(|mut creator: UiCreator<'_>| {
             println!("Creating menu...");
             let main_menu = creator.create(self.menu, ());

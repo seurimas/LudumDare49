@@ -24,6 +24,186 @@ Container(
     children: [
         Container(
             transform: (
+                id: "money",
+                x: 0,
+                y: -21,
+                width: 192.0,
+                height: 22.0,
+                anchor: TopMiddle,
+            ),
+            background: SolidColor(0.0, 0.2, 0.4, 1.0),
+            children: [
+                Image(
+                    transform: (
+                        id: "money_symbol",
+                        anchor: MiddleLeft,
+                        x: 8,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_0",
+                        anchor: MiddleRight,
+                        x: -8,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_1",
+                        anchor: MiddleRight,
+                        x: -24,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_2",
+                        anchor: MiddleRight,
+                        x: -40,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_3",
+                        anchor: MiddleRight,
+                        x: -56,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_4",
+                        anchor: MiddleRight,
+                        x: -72,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_5",
+                        anchor: MiddleRight,
+                        x: -88,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_6",
+                        anchor: MiddleRight,
+                        x: -104,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_7",
+                        anchor: MiddleRight,
+                        x: -120,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_8",
+                        anchor: MiddleRight,
+                        x: -136,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_9",
+                        anchor: MiddleRight,
+                        x: -152,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                ),
+                Image(
+                    transform: (
+                        id: "money_10",
+                        anchor: MiddleRight,
+                        x: -168,
+                        y: 0,
+                        width: 16,
+                        height: 22,
+                    ),
+                    image: SolidColor(0.0, 0.0, 0.0, 0.0),
+                )
+            ]
+        ),
+        Label(
+            transform: (
+                id: "refueling",
+                anchor: TopMiddle,
+                pivot: TopMiddle,
+                y: -53.,
+                height: 24.,
+                stretch: X( x_margin: 0. ),
+            ),
+            text: (
+                text: "Your refueling costs:",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 24.,
+                color: (0.92, 1.0, 0.0, 1.0),
+                align: Middle,
+            )
+        ),
+        Label(
+            transform: (
+                id: "loan",
+                anchor: TopMiddle,
+                pivot: TopMiddle,
+                y: -77.,
+                height: 24.,
+                stretch: X( x_margin: 0. ),
+                hidden: false,
+            ),
+            text: (
+                text: "You had to take out a loan!",
+                font: File("font/square.ttf", ("TTF", ())),
+                font_size: 24.,
+                color: (0.92, 0.0, 0.0, 1.0),
+                align: Middle,
+            )
+        ),
+        Container(
+            transform: (
                 id: "card_container_0",
                 anchor: BottomLeft,
                 x: .25,

@@ -10,14 +10,15 @@ use amethyst::{
     window::ScreenDimensions,
     Error,
 };
-use nalgebra::Vector2;
+use nalgebra::{Point2, Vector2};
 use ncollide2d::shape::{Ball, Cuboid, ShapeHandle};
 use nphysics2d::object::{BodyStatus, ColliderDesc, RigidBodyDesc};
 
 use crate::{
-    assets::SpriteStorage,
+    assets::{SpriteHandles, SpriteRes, SpriteStorage},
     delivery::{PlayerDeliveryArrowSystem, PlayerDeliverySystem, PlayerJumpSystem},
     economy::Enterprise,
+    particles::{emit_particle, Particle},
     physics::{Physics, PhysicsDesc, PhysicsHandle},
     tractor::{PlayerTractorSystem, TractorGravitySystem},
 };
@@ -86,21 +87,39 @@ impl<'s> System<'s> for PlayerMovementSystem {
         Write<'s, Physics>,
         ReadStorage<'s, PhysicsHandle>,
         WriteStorage<'s, Player>,
+        ReadStorage<'s, Transform>,
         Entities<'s>,
         Write<'s, Enterprise>,
         Read<'s, Time>,
+        Read<'s, LazyUpdate>,
+        SpriteRes<'s>,
         Read<'s, FpsCounter>,
     );
 
     fn run(
         &mut self,
-        (input, mut physics, handles, mut player, entities, mut enterprise, time, fps): Self::SystemData,
+        (
+            input,
+            mut physics,
+            handles,
+            mut player,
+            transforms,
+            entities,
+            mut enterprise,
+            time,
+            update,
+            sprites,
+            fps,
+        ): Self::SystemData,
     ) {
         let x_tilt = input.axis_value("leftright");
         let y_tilt = input.axis_value("updown");
         let boost = input.action_is_down("boost").unwrap_or(false);
         if let (Some(x_tilt), Some(y_tilt)) = (x_tilt, y_tilt) {
-            if let Some((entity, handle, player)) = (&entities, &handles, &mut player).join().next()
+            if let Some((entity, transform, handle, player)) =
+                (&entities, &transforms, &handles, &mut player)
+                    .join()
+                    .next()
             {
                 if player.state != PlayerState::Active {
                     return;
@@ -119,6 +138,18 @@ impl<'s> System<'s> for PlayerMovementSystem {
                         .transform_vector(&Vector2::new(0.0, y_tilt * speed)),
                 );
                 physics.set_angular_velocity(handle, -x_tilt);
+                if rand::random::<f64>() < burn_rate * 10.0 {
+                    let location = transform.translation();
+                    let mut direction = position
+                        .rotation
+                        .transform_vector(&Vector2::new(0.0, -y_tilt));
+                    emit_particle(
+                        update.create_entity(&entities),
+                        sprites.get_handle(),
+                        Particle::player(direction),
+                        Point2::new(location.x, location.y),
+                    );
+                }
             }
         }
         // println!("{}", fps.sampled_fps());

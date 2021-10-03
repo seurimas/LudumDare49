@@ -1,0 +1,25 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (1500.0, 1500.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 500,
+    asteroids: [Field(
+        normal: 800,
+        bombs: 80,
+        gases: 400,
+        artifacts: 3,
+    )],
+    modified_prices: {
+    },
+    billboards: [],
+    card: (
+        title: "Artifact Recovery",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Artifact Recovery",
+        description: "Recover the artifacts spotted in this area!",
+        shown_prices: [EncasedArtifact, Artifact, Bomb],
+    ),
+)

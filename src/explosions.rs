@@ -10,8 +10,10 @@ use nalgebra::Point2;
 use crate::{
     assets::{SpriteHandles, SpriteRes},
     asteroid::{resize_asteroid, Asteroid, AsteroidType},
+    economy::Enterprise,
     particles::{emit_particle, random_direction, Particle},
     physics::{Physics, PhysicsHandle},
+    player::Player,
 };
 
 #[derive(Component, Debug)]
@@ -57,9 +59,11 @@ impl<'s> System<'s> for ExplosionForceSystem {
         WriteStorage<'s, Explosion>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, PhysicsHandle>,
+        ReadStorage<'s, Player>,
         WriteStorage<'s, Asteroid>,
         Entities<'s>,
         Read<'s, LazyUpdate>,
+        Write<'s, Enterprise>,
         Write<'s, Physics>,
         SpriteRes<'s>,
     );
@@ -70,9 +74,11 @@ impl<'s> System<'s> for ExplosionForceSystem {
             mut explosions,
             transforms,
             handles,
+            players,
             mut asteroids,
             entities,
             update,
+            mut enterprise,
             mut physics,
             sprites,
         ): Self::SystemData,
@@ -94,6 +100,24 @@ impl<'s> System<'s> for ExplosionForceSystem {
                         Particle::explosion(&particles, direction),
                         Point2::new(location.x, location.y),
                     );
+                }
+                for (handle, player, entity) in (&handles, &players, &entities).join() {
+                    if let Some(player_location) = physics.get_location(handle) {
+                        let difference = nalgebra::Vector2::new(
+                            player_location.x - location.x,
+                            player_location.y - location.y,
+                        );
+                        let mut distance = difference.magnitude();
+                        if distance > 100.0 {
+                            continue;
+                        }
+                        enterprise
+                            .burn_fuel((*strength / distance / distance / distance / 100.0).into());
+                        physics.apply_impulse(
+                            handle,
+                            difference * (*strength / distance / distance / distance),
+                        );
+                    }
                 }
                 for (handle, asteroid, entity) in (&handles, &mut asteroids, &entities).join() {
                     if let Some(asteroid_location) = physics.get_location(handle) {

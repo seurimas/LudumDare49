@@ -240,6 +240,7 @@ pub fn generate_asteroid_field(
     bomb_count: usize,
     gas_count: usize,
     sulphur_count: usize,
+    artifact_count: usize,
     debris_count: (usize, f32),
     transform: Transform,
 ) {
@@ -302,6 +303,18 @@ pub fn generate_asteroid_field(
             world.create_entity(),
             spritesheet.clone(),
             AsteroidType::Sulphur,
+            transform,
+        );
+    }
+    for _ in 0..artifact_count {
+        let x = rand::random::<f32>() * size.0;
+        let y = rand::random::<f32>() * size.1;
+        let mut transform = transform.clone();
+        transform.append_translation_xyz(x, y, 0.0);
+        generate_asteroid(
+            world.create_entity(),
+            spritesheet.clone(),
+            AsteroidType::EncasedArtifact,
             transform,
         );
     }

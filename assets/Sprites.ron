@@ -316,13 +316,14 @@ List((
       height: 4,
       width: 4,
     ),
-    // Unused
+    // 48: Player
     (
       x: 44,
-      y: 13,
-      height: 4,
+      y: 29,
+      height: 3,
       width: 4,
     ),
+    // Unused
     (
       x: 44,
       y: 17,

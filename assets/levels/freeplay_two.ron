@@ -1,0 +1,25 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 0,
+    asteroids: [Field(
+        normal: 800,
+        bombs: 80,
+        gases: 400,
+        artifacts: 2,
+    )],
+    modified_prices: {
+    },
+    billboards: [],
+    card: (
+        title: "Local Field Two",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Local Field Two",
+        description: "Your own asteroid field. Free to visit!",
+        shown_prices: [Big, Medium, Bomb, Water, Hydrogen],
+    ),
+)

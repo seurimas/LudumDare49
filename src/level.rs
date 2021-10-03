@@ -23,6 +23,7 @@ use crate::{
     asteroid::{generate_asteroid_field, Asteroid, AsteroidType},
     billboards::{generate_billboard, BillboardDesc},
     delivery::{generate_delivery_zone, DeliveryAnimationSystem},
+    economy::Enterprise,
     menu::{find_by_id, CardDesc},
     physics::{Physics, PhysicsDesc, PhysicsHandle, PhysicsProximityEvent},
     player::initialize_player,
@@ -36,6 +37,7 @@ pub enum AsteroidDesc {
         bombs: Option<usize>,
         gases: Option<usize>,
         sulphur: Option<usize>,
+        artifacts: Option<usize>,
         debris: Option<(usize, f32)>,
     },
 }
@@ -172,6 +174,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                 bombs,
                 gases,
                 sulphur,
+                artifacts,
                 debris,
             } => {
                 let mut transform = Transform::default();
@@ -186,6 +189,7 @@ pub fn initialize_level(world: &mut World, level: &LevelHandle) {
                     bombs.unwrap_or_default(),
                     gases.unwrap_or_default(),
                     sulphur.unwrap_or_default(),
+                    artifacts.unwrap_or(1),
                     debris.unwrap_or_default(),
                     transform,
                 );
@@ -330,6 +334,7 @@ impl<'s> System<'s> for ReferenceCardSystem {
         WriteStorage<'s, HiddenPropagate>,
         Entities<'s>,
         Read<'s, Level>,
+        Read<'s, Enterprise>,
         SpriteRes<'s>,
     );
 
@@ -343,7 +348,17 @@ impl<'s> System<'s> for ReferenceCardSystem {
 
     fn run(
         &mut self,
-        (events, mut transforms, mut images, mut texts, mut hiddens, entities, level, sprites): Self::SystemData,
+        (
+            events,
+            mut transforms,
+            mut images,
+            mut texts,
+            mut hiddens,
+            entities,
+            level,
+            enterprise,
+            sprites,
+        ): Self::SystemData,
     ) {
         if let Some(reader) = &mut self.reader {
             for event in events.read(reader) {
@@ -365,19 +380,15 @@ impl<'s> System<'s> for ReferenceCardSystem {
                             hiddens.insert(show, HiddenPropagate::new());
                             hiddens.remove(hide);
                         }
-                        if let (Some(level_name), Some(level_description), Some(fuel_cost)) = (
+                        if let (Some(level_name), Some(level_description)) = (
                             find_by_id(&entities, &transforms, "level_name"),
                             find_by_id(&entities, &transforms, "level_description"),
-                            find_by_id(&entities, &transforms, "fuel_cost"),
                         ) {
                             if let Some(level_name) = texts.get_mut(level_name) {
                                 level_name.text = level.reference.name.clone();
                             }
                             if let Some(level_description) = texts.get_mut(level_description) {
                                 level_description.text = level.reference.description.clone();
-                            }
-                            if let Some(fuel_cost) = texts.get_mut(fuel_cost) {
-                                fuel_cost.text = format!("Cost to jump: {}", level.jump_cost);
                             }
                         }
                         for idx in 0..6 {

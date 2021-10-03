@@ -1,0 +1,29 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 500,
+    asteroids: [Field(
+        normal: 200,
+        bombs: 80,
+        gases: 800,
+    )],
+    modified_prices: {
+        WaterBig: 1.,
+        WaterMedium: 1.0,
+        Water: 1.0,
+        Hydrogen: 1.0,
+        Oxygen: 7.0,
+    },
+    billboards: [],
+    card: (
+        title: "Breathe Free",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Breathe Free",
+        description: "Gather oxygen to help terraform Xert III!",
+        shown_prices: [Oxygen, WaterBig, Hydrogen, Big, Bomb],
+    ),
+)

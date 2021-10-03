@@ -1,7 +1,13 @@
 [
     "levels/level0.ron",
     "levels/level1.ron",
-    "levels/beach_day.ron",
-    "levels/salvaging.ron",
     "levels/freeplay.ron",
+    "levels/beach_day.ron",
+    "levels/breathe_free.ron",
+    "levels/dont_blow.ron",
+    "levels/munitions.ron",
+    "levels/salvaging.ron",
+    "levels/artifact_recovery.ron",
+    "levels/megalith.ron",
+    "levels/freeplay_two.ron",
 ]

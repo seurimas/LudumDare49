@@ -15,6 +15,7 @@ pub enum ParticleType {
     TractorLight,
     TractorPull,
     Delivery,
+    Player,
     Explosion(usize),
 }
 
@@ -44,6 +45,15 @@ impl Particle {
             lifetime: 0.2,
             velocity: (50.0, 0.0),
             delta_velocity: (0.0, 5.0 - rand::random::<f32>() * 10.0),
+            rotation: f32::atan2(direction.y, direction.x),
+        }
+    }
+    pub fn player(direction: Vector2<f32>) -> Self {
+        Particle {
+            my_type: ParticleType::Player,
+            lifetime: 0.2,
+            velocity: (50.0, 0.0),
+            delta_velocity: (0.0, 5.0),
             rotation: f32::atan2(direction.y, direction.x),
         }
     }
@@ -84,6 +94,7 @@ impl Particle {
             ParticleType::TractorHeavy => 12,
             ParticleType::TractorLight => 13,
             ParticleType::TractorPull => 14,
+            ParticleType::Player => 48,
             ParticleType::Delivery => {
                 if rand::random() {
                     if rand::random() {
@@ -117,7 +128,11 @@ pub fn emit_particle(
     let mut transform = Transform::default();
     transform.set_translation_x(center.x);
     transform.set_translation_y(center.y);
-    transform.set_translation_z(1.0);
+    transform.set_translation_z(if particle.my_type == ParticleType::Player {
+        -1.0
+    } else {
+        1.0
+    });
     transform.set_rotation_2d(particle.rotation);
     builder
         .with(SpriteRender::new(sprites, particle.get_sprite_num()))

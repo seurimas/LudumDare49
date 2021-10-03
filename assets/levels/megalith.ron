@@ -1,0 +1,46 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (6000.0, 6000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 2000,
+    asteroids: [Field(
+        normal: 100,
+        bombs: 20,
+        gases: 200,
+        sulphur: 100,
+        debris: (5, 1.)
+    ), Field(
+        location: (1000.0, 2000.0, 800.0, 800.0),
+        bombs: 10,
+        gases: 300,
+        sulphur: 200,
+        debris: (100, 0.9)
+    )],
+    modified_prices: {
+        ShipPiece(0): 4.0,
+        ShipPiece(1): 4.0,
+        ShipPiece(2): 4.0,
+        ShipPiece(3): 4.0,
+        ShipPiece(4): 4.0,
+        ShipPiece(5): 4.0,
+        ShipPiece(6): 4.0,
+        ShipPieceTarnished(0): 0.05,
+        ShipPieceTarnished(1): 0.05,
+        ShipPieceTarnished(2): 0.05,
+        ShipPieceTarnished(3): 0.05,
+        ShipPieceTarnished(4): 0.05,
+        ShipPieceTarnished(5): 0.05,
+        ShipPieceTarnished(6): 0.05,
+    },
+    billboards: [],
+    card: (
+        title: "Megalith Salvage",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Megalith Salvage",
+        description: "Use acid to wash battle debris from the megalith!",
+        shown_prices: [ShipPiece(1), ShipPieceTarnished(1), Acid, Sulphur, Water],
+    ),
+)

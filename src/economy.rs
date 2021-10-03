@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use amethyst::{
-    core::{SystemBundle, Time, Transform},
+    core::{HiddenPropagate, SystemBundle, Time, Transform},
     ecs::*,
     prelude::*,
     renderer::{sprite::SpriteSheetHandle, SpriteRender},
-    ui::{UiFinder, UiImage, UiTransform},
+    ui::{UiFinder, UiImage, UiText, UiTransform},
     Error,
 };
 
@@ -20,8 +20,10 @@ use crate::{
 pub struct Enterprise {
     fuel: f64,
     funds: u64,
+    loans: i32,
     bankruptcies: usize,
     tried_jump: Option<f32>,
+    last_refueling: (u64, bool),
     last_completions: Vec<String>,
 }
 
@@ -36,8 +38,10 @@ impl Enterprise {
         Enterprise {
             fuel: 100.0,
             funds: 0,
+            loans: 0,
             bankruptcies: 0,
             tried_jump: None,
+            last_refueling: (0, false),
             last_completions: Vec::new(),
         }
     }
@@ -51,6 +55,10 @@ impl Enterprise {
         self.fuel -= rate * (time.delta_seconds() as f64);
     }
 
+    pub fn burn_fuel(&mut self, burn: f64) {
+        self.fuel -= burn;
+    }
+
     pub fn try_jump(&mut self, level: &Level) -> bool {
         if !self.can_jump(level) {
             self.tried_jump = Some(3.5);
@@ -61,6 +69,21 @@ impl Enterprise {
             self.last_completions.truncate(6);
             true
         }
+    }
+
+    pub fn refueling_cost(&self) -> u64 {
+        return f64::max(0.0, (100.0 - self.fuel) * 10.0) as u64;
+    }
+
+    pub fn refuel(&mut self) {
+        let fuel_costs = self.refueling_cost();
+        self.last_refueling = (fuel_costs, fuel_costs > self.funds);
+        if self.last_refueling.1 {
+            self.loans += 1;
+            self.funds += 2000;
+        }
+        self.funds = self.funds - fuel_costs;
+        self.fuel = 100.0;
     }
 
     pub fn can_jump(&mut self, level: &Level) -> bool {
@@ -135,6 +158,8 @@ impl<'s> System<'s> for MoneyHudSystem {
         Entities<'s>,
         WriteStorage<'s, UiTransform>,
         WriteStorage<'s, UiImage>,
+        WriteStorage<'s, UiText>,
+        WriteStorage<'s, HiddenPropagate>,
         SpriteRes<'s>,
         Read<'s, Level>,
         Write<'s, Enterprise>,
@@ -142,7 +167,16 @@ impl<'s> System<'s> for MoneyHudSystem {
 
     fn run(
         &mut self,
-        (entities, mut transforms, mut images, sprites, level, mut enterprise): Self::SystemData,
+        (
+            entities,
+            mut transforms,
+            mut images,
+            mut texts,
+            mut hiddens,
+            sprites,
+            level,
+            mut enterprise,
+        ): Self::SystemData,
     ) {
         if let Some(symbol) = find_by_id(&entities, &transforms, "insufficient_funds") {
             images.insert(
@@ -155,6 +189,28 @@ impl<'s> System<'s> for MoneyHudSystem {
                 symbol,
                 MoneyHudSystem::sufficient_funds(&sprites, enterprise.can_jump(&level)),
             );
+        }
+        if let Some(refueling) = find_by_id(&entities, &transforms, "refueling") {
+            if let Some(refueling_text) = texts.get_mut(refueling) {
+                refueling_text.text =
+                    format!("Your refueling costs: {}", enterprise.last_refueling.0);
+            }
+        }
+        if let Some(loan) = find_by_id(&entities, &transforms, "loan") {
+            if enterprise.last_refueling.1 {
+                hiddens.remove(loan);
+            } else {
+                hiddens.insert(loan, HiddenPropagate::new());
+            }
+        }
+        if let Some(fuel_cost) = find_by_id(&entities, &transforms, "fuel_cost") {
+            if let Some(fuel_cost) = texts.get_mut(fuel_cost) {
+                fuel_cost.text = format!(
+                    "Cost to jump: {} - Current fuel cost: {}",
+                    level.jump_cost,
+                    enterprise.refueling_cost()
+                );
+            }
         }
         if let Some(symbol) = find_by_id(&entities, &transforms, "money_symbol") {
             images.insert(symbol, MoneyHudSystem::symbol(&sprites));

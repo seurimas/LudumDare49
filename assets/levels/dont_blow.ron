@@ -1,0 +1,28 @@
+#![enable(implicit_some)]
+Level(
+    boundaries: (4000.0, 4000.0),
+    player_state: (0.0, 0.0),
+    deliveries: [(0.0, 0.0)],
+    jump_cost: 500,
+    asteroids: [Field(
+        bombs: 140,
+        gases: 800,
+    )],
+    modified_prices: {
+        WaterBig: 1.,
+        WaterMedium: 1.0,
+        Water: 1.0,
+        Hydrogen: 5.0,
+        Oxygen: 5.0,
+    },
+    billboards: [],
+    card: (
+        title: "Don't Blow It",
+        sprite_number: 0,
+    ),
+    reference: (
+        name: "Don't Blow It",
+        description: "Avoid blowing things up with bombs and hydrogen!",
+        shown_prices: [Oxygen, Hydrogen, WaterBig, Big, Bomb],
+    ),
+)

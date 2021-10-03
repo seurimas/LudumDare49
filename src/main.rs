@@ -120,7 +120,8 @@ impl SimpleState for GameplayState {
                 .find(|delivery| delivery.jumped())
                 .is_some()
         }) {
-            let enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
+            let mut enterprise = { data.world.read_resource::<Enterprise>().deref().clone() };
+            enterprise.refuel();
             return SimpleTrans::Switch(Box::new(MenuState::end_level(
                 self.assets.clone(),
                 Some(enterprise),

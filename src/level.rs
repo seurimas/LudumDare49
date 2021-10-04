@@ -230,7 +230,7 @@ fn reintroduce(
         rand::random::<f32>() * -outer.y.signum(),
     );
     physics.set_location(&handle, x, y);
-    let current_speed = physics.get_velocity(&handle).unwrap().magnitude().min(10.0);
+    let current_speed = physics.get_velocity(&handle).unwrap().magnitude().max(10.0);
     physics.set_velocity(&handle, Vector2::new(vx, vy).normalize() * current_speed);
 }
 
